@@ -14,7 +14,7 @@ This is a simulator to calculate laser-induced molecular orientation dynamics.
 #include "physics_constant.h"
 #include "matrix_element.h"
 #include "laser_pulses.h"
-
+#include "rotational_energy.h"
 using namespace std;
 
 
@@ -25,31 +25,14 @@ using namespace std;
 // data aquisition -> datum per STEP*dt sec
 #define STEP 100
 
-                                     /**functions**/
-double d3J3(double J, double M); // <cos^3> delta J = +3
-double d3J1(double J, double M); // <cos^3> delta J = +1
-double d3j1(double J, double M); // <cos^3> delta J = -1
-double d3j3(double J, double M); // <cos^3> delta J = -3
-double d2J2(double J, double M); // <cos^2> delta J = +2
-double d2J0(double J, double M); // <cos^2> delta J = 0
-double d2j2(double J, double M); // <cos^2> delta J = -2
-double d1J1(double J, double M); // <cos> delta J = +1
-double d1j1(double J, double M); // <cos> delta J = -1
-
-double Erot(double J); // rotational energy
-double E1w(double t); // electric field
-double E2w(double t); // electric field
-
 complex<double> RK(double t, int J, int M, complex<double> Cj3, complex<double> Cj2, complex<double> Cj1, complex<double> C0, complex<double> CJ1, complex<double> CJ2, complex<double> CJ3); // 4th order Runge-Kutta
 
 
 int main()
 {
     /**parameters and so on**/
-    int Jmax = 75; //maximum value of J  < NUM
+//    int Jmax = 75; //maximum value of J  < NUM
     int Jcalc;// Jcalc is the maximum value of J in calculation
-    double thr = 0.0001;   // threshold of rotationl distribution
-    int outnum = 0; // use in Jcaalc calculation
     int N; // number of step
     int step = 1; // step in time evolution
     double cos[SERIES]; // time series of <costheta>
@@ -66,12 +49,8 @@ int main()
     complex<double> cj3 = (0.0, 0.0), cj2 = (0.0, 0.0), cj1 = (0.0, 0.0), cJ0 = (0.0, 0.0), cJ1 = (0.0, 0.0), cJ2 = (0.0, 0.0), cJ3 = (0.0, 0.0);
     complex<double> kj3 = (0.0, 0.0), kj2 = (0.0, 0.0), kj1 = (0.0, 0.0), kJ0 = (0.0, 0.0), kJ1 = (0.0, 0.0), kJ2 = (0.0, 0.0), kJ3 = (0.0, 0.0);
 
-
-    /*******************************************************************************/
     double T = 0.8; // temperature in K unit
-                    /*******************************************************************************/
 
-                    /*************************************************/
     double t;  // time
     double tmin = -2000 * pow(10.0, -15.0) - delay01;
     double tmax = 200.0*pow(10.0, -12.0);
@@ -81,6 +60,9 @@ int main()
 
     double Ethr = 600000.0;
     /*************************************************/
+
+    
+    double b = 1 / (kB*T); // Boltzmann factor
 
     time_t timer;
     time(&timer); // get the date
@@ -123,67 +105,12 @@ int main()
     }
 
 
-    /**calculation of partition function**/
-    double b = 1 / (kB*T); // Boltzmann factor
-    double Z = 0.0, z;  // Z : partition function
     double P; // statistic weight
 
-    if (T == 0.0)
-        Z = 1.0;
-
-
-    else // finite temperature
-    {
-        for (int J = 0; J <= Jmax; J++)
-        {
-            z = (2.0 * double(J) + 1.0) * exp(-b * Erot(double(J)));
-            Z = z + Z;
-        }
-    } //end of the Z calculation at the finite temperature
-      // end of the calculation of partition function Z
-
-
-
-      /**calculation of Jcalc and initial population**/
-
-    FILE *intpop, *finpop;
-
-    intpop = fopen("intpop.txt", "w");
+    FILE *finpop;
     finpop = fopen("finpop.txt", "w");
-
-    if (T == 0.0)
-    {
-        Jcalc = 0; // J=0 only
-        for (int J = 0; J <= Jmax; J++) // J=0 only
-        {
-            if (J == 0)
-                fprintf(intpop, "%d\t%f\n", J, 1.0);
-            else
-                fprintf(intpop, "%d\t%f\n", J, 0.0);
-        }
-    }
-
-    else // finite temperature
-    {
-        for (int J = 0; J <= Jmax; J++)
-        {
-            z = (2.0 * double(J) + 1.0) * exp(-b * Erot(double(J)));
-
-            if (z / Z <= thr && outnum == 0) // if the distribution can be neglected( < 100Pthr%), then set J as Jcalc
-            {
-                fprintf(intpop, "%d\t%f\n", J, z / Z);
-                Jcalc = J - 1;
-                outnum = 1;
-            }
-
-            else
-            {
-                fprintf(intpop, "%d\t%f\n", J, z / Z);
-            }
-        }
-    }// end of the Jcalc calculation at the finite temperature
-     // end of the calculation of Jcalc and initial population
-
+    Jcalc = calculate_initial_population(T);
+    
      /**initialization of final population**/
     for (int J = 0; J<NUM; J++)
     {
@@ -200,25 +127,11 @@ int main()
 
     for (int Jint = 0; Jint <= Jcalc; Jint++)
     {
-
-
         // M calculation
         for (int M = 0; M <= Jint; M++)
         {
-
-            /**initial condition**/
-            // thermal weight
-            if (T == 0.0)
-                P = 1.0;
-
-            else // finite temperature
-            {
-                if (M == 0)
-                    P = exp(-b * Erot(double(Jint))) / Z;
-                else
-                    P = 2.0 * exp(-b * Erot(double(Jint))) / Z;
-            }
-
+            P = calculate_Mlevel_population(T, Jint, M);
+            
             N = 0; // set the number of steps 0
             step = 1;
 
@@ -884,7 +797,7 @@ int main()
 
 
 
-                                                      // output the maximum value of <costheta>
+    // output the maximum value of <costheta>
     printf("-----------------------\n");
     printf("calculation time = %f sec\n", calctime);
     printf("<cos>max  = %f\n", cosmax);
@@ -932,15 +845,6 @@ int main()
 
 }
 
-
-double Erot(double J)  // rotational energy in Joule unit
-{
-    double K = J * (J + 1.0);
-    //    double ret=B*K*h*c*100.0;   // rigid rotator
-    double ret = (B - D * K)*K*h*vc*100.0;   //centrifugal distortion is included.
-
-    return ret;
-}
 
 complex<double> RK(double t, int J, int M, complex<double> Cj3, complex<double> Cj2, complex<double> Cj1, complex<double> C0, complex<double> CJ1, complex<double> CJ2, complex<double> CJ3)
 {
