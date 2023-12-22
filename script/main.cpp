@@ -9,8 +9,9 @@ K.SONODA
 #include <complex>
 #include <math.h>
 #include <time.h>
-
+#include "physics_constant.h"
 using namespace std;
+
 
 // number of time series
 #define SERIES 60000
@@ -20,17 +21,7 @@ using namespace std;
 #define STEP 100
 
 
-/**physical constant**/
-const complex<double>I = complex<double>(0.0, 1.0);  // imaginary unit
-const double PI = acos(-1.0);  // pi
-const double kB = 1.3806504*pow(10.0, -23.0); // Boltzmann constant
-const double h = 6.62606896*pow(10.0, -34.0); // Planck constant in J•sec
-const double hbar = h / 2.0 / PI; // Dirac constant difined as hbar=h/pi
-const double vc = 299792458.0; // velocity of light in m/sec
-const double epsilon = 8.854187817*pow(10.0, -12.0); // permittivity of vacuum
-
-
-                                                     /**molecular properties**/
+/**molecular properties**/
 const double apara = 54.06 * (1.64878*pow(10.0, -41.0)); // α|| in SI unit
 const double aperp = 26.09 * (1.64878*pow(10.0, -41.0));// α⊥ in SI unit
 const double da = apara - aperp; // Δα
@@ -50,7 +41,7 @@ const double Trot = 1.0 / 200.0 / B / vc; // rotational period in sec unit
                                           */
 
                                           ////////////////////////////////////////////////////////
-const double intensitym1 = 0.0*pow(10.0, 12.0); // first pulse (sub pulse) intensity in W/cm^2 unit
+//const double intensitym1 = 0.0*pow(10.0, 12.0); // first pulse (sub pulse) intensity in W/cm^2 unit
 const double intensity0 = 20.0*pow(10.0, 12.0); // second pulse (sub pulse) intensity in W/cm^2 unit
 const double intensity1 = 20.0*pow(10.0, 12.0); // third pulse (main pulse) intensity in W/cm^2 unit
 const double FWHM = 70.0*pow(10.0, -15.0); // FWHM in second unit
@@ -58,10 +49,8 @@ const double phase = 0.0;  // relative phase of w and 2w     phi = phase * PI
 const double phi = phase * PI; // relative phase
 const double rat = 0.5; // intensity ratio I2w/Iw
 
-const double nm10 = 0.24; // delay
 const double n01 = 0.242; // delay
 const double delay01 = n01 * Trot; // delay
-const double delaym10 = nm10 * Trot; // delay
                                      ////////////////////////////////////////////////////////
 
 
@@ -85,7 +74,6 @@ complex<double> RK(double t, int J, int M, complex<double> Cj3, complex<double> 
 
 int main()
 {
-
     /**parameters and so on**/
     int Jmax = 75; //maximum value of J  < NUM
     int Jcalc;// Jcalc is the maximum value of J in calculation
@@ -116,7 +104,7 @@ int main()
     double t;  // time
     double trange = 50.0*pow(10.0, -15.0);  // range of small step calc
                                             //    double tmin = -10000*pow(10.0,-15.0)-delay ;
-    double tmin = -2000 * pow(10.0, -15.0) - delay01 - delaym10;
+    double tmin = -2000 * pow(10.0, -15.0) - delay01;
     double tmax = 200.0*pow(10.0, -12.0);
     double dt = 1.0*pow(10.0, -15.0);  // step
     double dtref = dt;
@@ -1113,12 +1101,6 @@ double d3J3(double J, double M) // <JM|cos3|J+3M>
 
 double E1w(double t) //laser pulse
 {
-    // pulsem1 -> sub pulse (first pulse)
-    double pulsem1;
-    double envelopem1 = exp(-2.0*log(2.0)*(t + delaym10 + delay01)*(t + delaym10 + delay01) / FWHM / FWHM);
-    double Em1 = sqrt(2.0 * 10000.0 * intensitym1 / epsilon / vc); // amplitude of 800 nm fundumental
-
-    pulsem1 = Em1 * envelopem1; //  t_pulse0 < t_pulse1
 
                                 // pulse0 -> sub pulse (second pulse)
     double pulse0;
@@ -1133,7 +1115,7 @@ double E1w(double t) //laser pulse
     double E1 = sqrt(2.0 * 10000.0 * intensity1 / epsilon / vc); // amplitude of 800 nm fundumental
     pulse1 = E1 * envelope1;
 
-    return pulsem1 + pulse0 + pulse1;
+    return pulse0 + pulse1;
 }
 
 double E2w(double t) //laser pulse  (2omega)
