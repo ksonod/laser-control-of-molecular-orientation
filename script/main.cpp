@@ -73,8 +73,6 @@ int main()
 
                     /*************************************************/
     double t;  // time
-    double trange = 50.0*pow(10.0, -15.0);  // range of small step calc
-                                            //    double tmin = -10000*pow(10.0,-15.0)-delay ;
     double tmin = -2000 * pow(10.0, -15.0) - delay01;
     double tmax = 200.0*pow(10.0, -12.0);
     double dt = 1.0*pow(10.0, -15.0);  // step
@@ -882,13 +880,13 @@ int main()
 
     end = clock(); // calculation time
 
-    calctime = (double(end - start)) / 1000.0 / 60.0; // calculation time (minuites)
+    calctime = (double(end - start)) / CLOCKS_PER_SEC; // calculation time (seconds)
 
 
 
                                                       // output the maximum value of <costheta>
     printf("-----------------------\n");
-    printf("calculation time = %f min\n", calctime);
+    printf("calculation time = %f sec\n", calctime);
     printf("<cos>max  = %f\n", cosmax);
     printf("<cos>min  = %f\n", cosmin);
     printf("<cos2>max = %f\n", cos2max);
@@ -927,7 +925,7 @@ int main()
     fprintf(fp3, " <cos^2>t=0     : %f\n", cos20);
     fprintf(fp3, "*******************************************************************\n");
     fprintf(fp3, "-- CALCULATION TIME --\n");
-    fprintf(fp3, " CALC. TIME     : %f min\n", calctime);
+    fprintf(fp3, " CALC. TIME     : %f sec\n", calctime);
     fprintf(fp3, "*******************************************************************\n");
 
     return 0;
