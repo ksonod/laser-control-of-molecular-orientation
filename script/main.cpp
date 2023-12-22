@@ -1,7 +1,9 @@
-/*************************************
-MOLECULAR ORIENTATION
-K.SONODA
-*************************************/
+/*
+Molecular Orientation Simulator
+ 
+This is a simulator to calculate laser-induced molecular orientation dynamics.
+*/
+
 
 #include <iostream>
 #include <stdio.h>
@@ -11,6 +13,8 @@ K.SONODA
 #include <time.h>
 #include "physics_constant.h"
 #include "matrix_element.h"
+#include "laser_pulses.h"
+
 using namespace std;
 
 
@@ -20,40 +24,6 @@ using namespace std;
 #define NUM 90
 // data aquisition -> datum per STEP*dt sec
 #define STEP 100
-
-
-/**molecular properties**/
-const double apara = 54.06 * (1.64878*pow(10.0, -41.0)); // α|| in SI unit
-const double aperp = 26.09 * (1.64878*pow(10.0, -41.0));// α⊥ in SI unit
-const double da = apara - aperp; // Δα
-const double bpara = -46.3 * (3.20636 * pow(10.0, -53.0)); //β||
-const double bperp = -60.4 * (3.20636 * pow(10.0, -53.0)); //β⊥
-const double B = 6081.492475*(3.335641*pow(10.0, -5.0)); // rotational constant in cm^-1
-                                                         //const double D = 1.301777*pow(10.0,-3.0) * ( 3.335641*pow(10.0,-5.0) ) ; // centrifugal constant in cm^-1
-const double D = 0.0; // centrifugal constant in cm^-1
-const double Trot = 1.0 / 200.0 / B / vc; // rotational period in sec unit
-
-
-                                          ///////////////////////////////////////////
-                                          /*
-                                          |    delaym10      |     delay01     |
-                                          pulsem1            pulse0            pulse1 (main pulse)
-                                          omega              omoega          omega+2omega
-                                          */
-
-                                          ////////////////////////////////////////////////////////
-//const double intensitym1 = 0.0*pow(10.0, 12.0); // first pulse (sub pulse) intensity in W/cm^2 unit
-const double intensity0 = 20.0*pow(10.0, 12.0); // second pulse (sub pulse) intensity in W/cm^2 unit
-const double intensity1 = 20.0*pow(10.0, 12.0); // third pulse (main pulse) intensity in W/cm^2 unit
-const double FWHM = 70.0*pow(10.0, -15.0); // FWHM in second unit
-const double phase = 0.0;  // relative phase of w and 2w     phi = phase * PI
-const double phi = phase * PI; // relative phase
-const double rat = 0.5; // intensity ratio I2w/Iw
-
-const double n01 = 0.242; // delay
-const double delay01 = n01 * Trot; // delay
-                                     ////////////////////////////////////////////////////////
-
 
                                      /**functions**/
 double d3J3(double J, double M); // <cos^3> delta J = +3
@@ -66,10 +36,10 @@ double d2j2(double J, double M); // <cos^2> delta J = -2
 double d1J1(double J, double M); // <cos> delta J = +1
 double d1j1(double J, double M); // <cos> delta J = -1
 
-
 double Erot(double J); // rotational energy
 double E1w(double t); // electric field
 double E2w(double t); // electric field
+
 complex<double> RK(double t, int J, int M, complex<double> Cj3, complex<double> Cj2, complex<double> Cj1, complex<double> C0, complex<double> CJ1, complex<double> CJ2, complex<double> CJ3); // 4th order Runge-Kutta
 
 
@@ -964,33 +934,6 @@ int main()
 
 }
 
-
-double E1w(double t) //laser pulse
-{
-                                // pulse0 -> sub pulse (second pulse)
-    double pulse0;
-    double envelope0 = exp(-2.0*log(2.0)*(t + delay01)*(t + delay01) / FWHM / FWHM);
-    double E0 = sqrt(2.0 * 10000.0 * intensity0 / epsilon / vc); // amplitude of 800 nm fundumental
-
-    pulse0 = E0 * envelope0; //  t_pulse0 < t_pulse1
-
-                             // pulse1 -> main pulse (second pulse) overlaped with the second harmonic.
-    double pulse1;
-    double envelope1 = exp(-2.0*log(2.0)*t*t / FWHM / FWHM);
-    double E1 = sqrt(2.0 * 10000.0 * intensity1 / epsilon / vc); // amplitude of 800 nm fundumental
-    pulse1 = E1 * envelope1;
-
-    return pulse0 + pulse1;
-}
-
-double E2w(double t) //laser pulse  (2omega)
-{
-    double INTENSITYw2 = rat * intensity1; // intensity of SHG
-    double E2 = sqrt(2.0 * 10000.0 * INTENSITYw2 / epsilon / vc); // amplitude of SHG
-    double envelope1 = exp(-2.0*log(2.0)*t*t / FWHM / FWHM);
-
-    return E2 * envelope1;
-}
 
 double Erot(double J)  // rotational energy in Joule unit
 {
