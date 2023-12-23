@@ -1,9 +1,5 @@
-#include "params.h"
-
 #ifndef rotational_energy_h
 #define rotational_energy_h
-
-
 
 
 double Erot(double J)  // rotational energy in Joule unit

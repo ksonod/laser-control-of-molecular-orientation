@@ -4,7 +4,6 @@ Molecular Orientation Simulator
 This is a simulator to calculate laser-induced molecular orientation dynamics.
 */
 
-
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,26 +11,16 @@ This is a simulator to calculate laser-induced molecular orientation dynamics.
 #include <math.h>
 #include <time.h>
 #include "physics_constant.h"
+#include "params.h"
 #include "matrix_element.h"
 #include "laser_pulses.h"
 #include "rotational_energy.h"
-using namespace std;
-
-
-// number of time series
-#define SERIES 60000
-// maximum number of data
-#define NUM 90
-// data aquisition -> datum per STEP*dt sec
-#define STEP 100
-
-complex<double> RK(double t, int J, int M, complex<double> Cj3, complex<double> Cj2, complex<double> Cj1, complex<double> C0, complex<double> CJ1, complex<double> CJ2, complex<double> CJ3); // 4th order Runge-Kutta
+#include "runge_kutta.h"
 
 
 int main()
 {
     /**parameters and so on**/
-//    int Jmax = 75; //maximum value of J  < NUM
     int Jcalc;// Jcalc is the maximum value of J in calculation
     int N; // number of step
     int step = 1; // step in time evolution
@@ -44,10 +33,10 @@ int main()
     double cos20 = 0.0; // <cos^2theta> at t = 0
     clock_t start, end; // calculation time
     double calctime; // calculation time
-    complex<double> c[NUM], k[4][NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).   k[RK][level]
+    std::complex<double> c[NUM], k[4][NUM], k0[NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).   k[RK][level]
     double cfin[NUM];
-    complex<double> cj3 = (0.0, 0.0), cj2 = (0.0, 0.0), cj1 = (0.0, 0.0), cJ0 = (0.0, 0.0), cJ1 = (0.0, 0.0), cJ2 = (0.0, 0.0), cJ3 = (0.0, 0.0);
-    complex<double> kj3 = (0.0, 0.0), kj2 = (0.0, 0.0), kj1 = (0.0, 0.0), kJ0 = (0.0, 0.0), kJ1 = (0.0, 0.0), kJ2 = (0.0, 0.0), kJ3 = (0.0, 0.0);
+    std::complex<double> cj3 = (0.0, 0.0), cj2 = (0.0, 0.0), cj1 = (0.0, 0.0), cJ0 = (0.0, 0.0), cJ1 = (0.0, 0.0), cJ2 = (0.0, 0.0), cJ3 = (0.0, 0.0);
+    std::complex<double> kj3 = (0.0, 0.0), kj2 = (0.0, 0.0), kj1 = (0.0, 0.0), kJ0 = (0.0, 0.0), kJ1 = (0.0, 0.0), kJ2 = (0.0, 0.0), kJ3 = (0.0, 0.0);
 
     double T = 0.8; // temperature in K unit
 
@@ -60,12 +49,10 @@ int main()
 
     double Ethr = 600000.0;
     /*************************************************/
-
-    
-    double b = 1 / (kB*T); // Boltzmann factor
-
     time_t timer;
     time(&timer); // get the date
+
+    check_params();
 
     printf("*******************************************************************\n");
     printf(" %s", ctime(&timer));
@@ -74,8 +61,6 @@ int main()
     printf(" INTENSITY (2nd): omega1 = %f TW , omega2 = %f TW\n", intensity1*pow(10.0, -12.0), rat*intensity1*pow(10.0, -12.0));
     printf(" PULSE DURATION : FWHM = %f fs\n", FWHM*pow(10.0, 15.0));
     printf(" RELATIVE PHASE : phi = %f*pi\n", phase);
-    //    printf(" DELAY          : %f ps (%f*Trot)\n", delay*pow(10.0,12.0) , n );
-
 
     FILE *fp1, *fp2, *fp3, *fp4;
 
@@ -83,7 +68,6 @@ int main()
     fp2 = fopen("cos.txt", "w");
     fp3 = fopen("output.txt", "w");
     fp4 = fopen("pulseenvelope.txt", "w");
-
 
     // output file
     fprintf(fp3, "*******************************************************************\n");
@@ -95,15 +79,12 @@ int main()
     fprintf(fp3, "-- VALIDITY --\n");
 
 
-
     /**initial condition**/
-
     for (N = 0; N < SERIES; N++) // time series of the alignment and orientation parameter
     {
         cos[N] = 0.0;  // set the value of <costheta> zero
         cos2[N] = 0.0;  // set the value of <cos^2theta> zero
     }
-
 
     double P; // statistic weight
 
@@ -140,17 +121,17 @@ int main()
             {
                 //initial population
                 if (j == Jint)
-                    c[j] = complex<double>(1.0, 0.0);
+                    c[j] = std::complex<double>(1.0, 0.0);
                 else
-                    c[j] = complex<double>(0.0, 0.0);
+                    c[j] = std::complex<double>(0.0, 0.0);
             }
             //time evolution
 
             for (t = tmin; t <= tmax; t = t + dt)
             {
                 //initialization
-                complex<double> align = (0.0, 0.0), asum = (0.0, 0.0); // align: alignment parameter
-                complex<double> orient = (0.0, 0.0), osum = (0.0, 0.0); // orient: orientaion parameter
+                std::complex<double> align = (0.0, 0.0), asum = (0.0, 0.0); // align: alignment parameter
+                std::complex<double> orient = (0.0, 0.0), osum = (0.0, 0.0); // orient: orientaion parameter
                 NORM = 0.0, Imcos2 = 0.0, Imcos = 0.0;
                 dt = dtref; // small step
 
@@ -215,8 +196,6 @@ int main()
                             k[0][j] = dt * RK(t, j, M, cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3);
 
                         } // end of the k[0][j] calculation for 2<j
-
-
                         else if (j <= 2)
                         {
                             if (j == abs(M))
@@ -238,10 +217,7 @@ int main()
                                 k[0][j] = dt * RK(t, j, M, 0.0, 0.0, 0.0, cJ0, cJ1, cJ2, cJ3);
 
                         }    // end of the k[0][j] calculation for j <= 2
-
-
                     }// end of the k[0][j] calculation
-
 
                      // calculation of k[1][]
                     for (int j = 0; j <= Jmax; j++)
@@ -593,13 +569,10 @@ int main()
 
                 } // end of the RK calculation
 
-
                 else // long duration step without RK calculation in the region that the laser pulse does not exist
                     dt = dtlong;
 
-
-
-                //<cos^2theta> calculation
+                // <cos^2theta> calculation
                 for (int j = 0; j <= Jmax; j++)
                 {
                     if (j < abs(M)) // impossible
@@ -843,26 +816,4 @@ int main()
 
     return 0;
 
-}
-
-
-complex<double> RK(double t, int J, int M, complex<double> Cj3, complex<double> Cj2, complex<double> Cj1, complex<double> C0, complex<double> CJ1, complex<double> CJ2, complex<double> CJ3)
-{
-    double wj3 = (Erot(double(J) - 3.0) - Erot(double(J))) / hbar;
-    double wj2 = (Erot(double(J) - 2.0) - Erot(double(J))) / hbar;
-    double wj1 = (Erot(double(J) - 1.0) - Erot(double(J))) / hbar;
-    double wJ1 = (Erot(double(J) + 1.0) - Erot(double(J))) / hbar;
-    double wJ2 = (Erot(double(J) + 2.0) - Erot(double(J))) / hbar;
-    double wJ3 = (Erot(double(J) + 3.0) - Erot(double(J))) / hbar;
-
-    double term0 = 0.25 * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * (aperp + da * d2J0(double(J), double(M)));
-    double term1 = (1.0 / 8.0) * (bpara - 3.0*bperp) * E1w(t) * E1w(t) * E2w(t) * d3J3(double(J), double(M)) * cos(phi);
-    double term2 = (1.0 / 8.0) * (bpara - 3.0*bperp) * E1w(t) * E1w(t) * E2w(t) * d3j3(double(J), double(M));
-    double term3 = 0.25 * da * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * d2J2(double(J), double(M));
-    double term4 = 0.25 * da * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * d2j2(double(J), double(M));
-    double term5 = (3.0 / 8.0 * bperp * E1w(t) * E1w(t) * E2w(t) * d1J1(double(J), double(M)) + (1.0 / 8.0)*(bpara - 3.0*bperp)* E1w(t) * E1w(t) * E2w(t) * d3J1(double(J), double(M))) * cos(phi);
-    double term6 = (3.0 / 8.0 * bperp * E1w(t) * E1w(t) * E2w(t) * d1j1(double(J), double(M)) + (1.0 / 8.0)*(bpara - 3.0*bperp)* E1w(t) * E1w(t) * E2w(t) * d3j1(double(J), double(M))) * cos(phi);
-
-    complex<double> ret = (I / hbar) * (term0 * C0 + term1 * CJ3 * exp(-I * wJ3*t) + term2 * Cj3 * exp(-I * wj3*t) + term3 * CJ2 * exp(-I * wJ2*t) + term4 * Cj2 * exp(-I * wj2*t) + term5 * CJ1 * exp(-I * wJ1*t) + term6 * Cj1 * exp(-I * wj1*t));
-    return  ret;
 }

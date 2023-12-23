@@ -1,5 +1,3 @@
-#include "physics_constant.h"
-#include "params.h"
 #ifndef laser_pulses_h
 #define laser_pulses_h
 

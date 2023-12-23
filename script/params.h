@@ -1,7 +1,13 @@
-#include "physics_constant.h"
-
 #ifndef params_h
 #define params_h
+
+// number of time series
+#define SERIES 60000
+// maximum number of data
+#define NUM 90
+// data aquisition -> datum per STEP*dt sec
+#define STEP 100
+
 
 /**molecular properties**/
 const double apara = 54.06 * (1.64878*pow(10.0, -41.0)); // α|| in SI unit
@@ -30,5 +36,13 @@ const double n01 = 0.242; // delay
 const double delay01 = n01 * Trot; // delay
 int Jmax = 75; //maximum value of J  < NUM
 
+
+void check_params()
+{
+    if (Jmax < 3 || Jmax >= NUM)
+    {
+        throw std::invalid_argument("Jmax should be changed.");
+    }
+}
 
 #endif /* params_h */
