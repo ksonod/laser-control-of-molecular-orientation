@@ -56,7 +56,7 @@ double calculate_Mlevel_population(double T, int J, int M)
 
 int calculate_initial_population(double T)
 {
-    int Jcalc;   
+    int Jcalc = 0 ;
     double z=0.0;
     double Z = partition_function(T);
     int outnum = 0; // use in Jcaalc calculation
@@ -103,6 +103,5 @@ int calculate_initial_population(double T)
     
     return Jcalc;
 }
-
 
 #endif /* rotational_energy_h */

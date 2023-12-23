@@ -4,11 +4,7 @@ This is a simulator to calculate molecular orientation dynamics induced by two-c
 */
 
 #include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
 #include <complex>
-#include <math.h>
-#include <time.h>
 #include "physics_constant.h"
 #include "params.h"
 #include "matrix_element.h"
@@ -33,13 +29,13 @@ int main()
     clock_t start, end; // calculation time
     double calctime; // calculation time
 //    std::complex<double> k[4][NUM], k0[NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).   k[RK][level]
-    std::complex<double> c[NUM], k[4][NUM], k0[NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).
+    std::complex<double> c[NUM], k[4][NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).
     double cfin[NUM];
-    std::complex<double> cj3 = (0.0, 0.0), cj2 = (0.0, 0.0), cj1 = (0.0, 0.0), cJ0 = (0.0, 0.0), cJ1 = (0.0, 0.0), cJ2 = (0.0, 0.0), cJ3 = (0.0, 0.0);
-    std::complex<double> kj3 = (0.0, 0.0), kj2 = (0.0, 0.0), kj1 = (0.0, 0.0), kJ0 = (0.0, 0.0), kJ1 = (0.0, 0.0), kJ2 = (0.0, 0.0), kJ3 = (0.0, 0.0);
+    std::complex<double> cj3 = 0.0, cj2 = 0.0, cj1 = 0.0, cJ0 = 0.0, cJ1 = 0.0, cJ2 = 0.0, cJ3 = 0.0;
+    std::complex<double> kj3 = 0.0, kj2 = 0.0, kj1 = 0.0, kJ0 = 0.0, kJ1 = 0.0, kJ2 = 0.0, kJ3 = 0.0;
 
-    std::complex<double> align = (0.0, 0.0), asum = (0.0, 0.0); // align: alignment parameter
-    std::complex<double> orient = (0.0, 0.0), osum = (0.0, 0.0); // orient: orientaion parameter
+    std::complex<double> align = 0.0, asum = 0.0; // align: alignment parameter
+    std::complex<double> orient = 0.0, osum = 0.0; // orient: orientaion parameter
 
     
     double T = 0.8; // temperature in K unit
@@ -133,11 +129,13 @@ int main()
             for (t = tmin; t <= tmax; t = t + dt)
             {
                 //initialization
-                align = (0.0, 0.0); // align: alignment parameter
-                asum = (0.0, 0.0);
-                orient = (0.0, 0.0); // orient: orientaion parameter
-                osum = (0.0, 0.0);
-                NORM = 0.0, Imcos2 = 0.0, Imcos = 0.0;
+                align = 0.0; // align: alignment parameter
+                asum = 0.0;
+                orient = 0.0; // orient: orientaion parameter
+                osum = 0.0;
+                NORM = 0.0;
+                Imcos2 = 0.0;
+                Imcos = 0.0;
                 dt = dtref; // small step
 
                 if (Ethr < (E1w(t) + E2w(t))) // Runge-Kutta calculation in the region that the effect of laser pulse is important
@@ -219,7 +217,7 @@ int main()
                  //imaginary part of <cos^2theta>
                 Imcos2 = imag(align);
 
-                //<costheta> calculation
+                // <costheta> calculation
                 for (int j = 0; j <= Jmax; j++)
                 {
                     if (j < abs(M))

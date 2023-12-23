@@ -8,7 +8,6 @@
 // data aquisition -> datum per STEP*dt sec
 #define STEP 100
 
-
 /**molecular properties**/
 const double apara = 54.06 * (1.64878*pow(10.0, -41.0)); // α|| in SI unit
 const double aperp = 26.09 * (1.64878*pow(10.0, -41.0));// α⊥ in SI unit

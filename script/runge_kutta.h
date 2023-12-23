@@ -29,7 +29,7 @@ std::complex<double> RK(double t, int J, int M, std::complex<double> Cj3, std::c
  */
 std::tuple<std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>> assign_coeff(std::complex<double> (&c)[NUM], int j, int M)
 {
-    std::complex<double> cj3 = (0.0, 0.0), cj2 = (0.0, 0.0), cj1 = (0.0, 0.0), cJ0 = (0.0, 0.0), cJ1 = (0.0, 0.0), cJ2 = (0.0, 0.0), cJ3 = (0.0, 0.0);
+    std::complex<double> cj3 = 0.0, cj2 = 0.0, cj1 = 0.0, cJ0 = 0.0, cJ1 = 0.0, cJ2 = 0.0, cJ3 = 0.0;
 
     if (j >= abs(M))
     {
