@@ -4,6 +4,7 @@ This is a simulator to calculate molecular orientation dynamics induced by two-c
 */
 
 #include <iostream>
+#include <fstream>
 #include <complex>
 #include "physics_constant.h"
 #include "params.h"
@@ -16,11 +17,12 @@ This is a simulator to calculate molecular orientation dynamics induced by two-c
 int main()
 {
     /**parameters and so on**/
+    double P; // statistic weight
     int Jcalc;// Jcalc is the maximum value of J in calculation
     int N; // number of step
     int step = 1; // step in time evolution
-    double cos[SERIES]; // time series of <costheta>
-    double cos2[SERIES]; // time series of <cos2theta>
+    double cos[SERIES] = {0}; // time series of <costheta>
+    double cos2[SERIES] = {0}; // time series of <cos2theta>
     double NORM = 0.0, Imcos2 = 0.0, Imcos = 0.0; // norm and imaginary part of <cos^2theta> and <costheta> . check these values for the test of the validity of calculation
     double cosmax = 0.0; // maximum value of <costheta>
     double cosmin = 0.0; // minimum value of <costheta>
@@ -30,13 +32,12 @@ int main()
     double calctime; // calculation time
 //    std::complex<double> k[4][NUM], k0[NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).   k[RK][level]
     std::complex<double> c[NUM], k[4][NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).
-    double cfin[NUM];
-    std::complex<double> cj3 = 0.0, cj2 = 0.0, cj1 = 0.0, cJ0 = 0.0, cJ1 = 0.0, cJ2 = 0.0, cJ3 = 0.0;
-    std::complex<double> kj3 = 0.0, kj2 = 0.0, kj1 = 0.0, kJ0 = 0.0, kJ1 = 0.0, kJ2 = 0.0, kJ3 = 0.0;
+    double cfin[NUM] = {0};
+    std::complex<double> cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3;
+    std::complex<double> kj3, kj2, kj1, kJ0, kJ1, kJ2, kJ3;
 
     std::complex<double> align = 0.0, asum = 0.0; // align: alignment parameter
     std::complex<double> orient = 0.0, osum = 0.0; // orient: orientaion parameter
-
     
     double T = 0.8; // temperature in K unit
 
@@ -46,63 +47,39 @@ int main()
     double dt = 1.0*pow(10.0, -15.0);  // step
     double dtref = dt;
     double dtlong = 40.0*pow(10.0, -15.0);
-
     double Ethr = 600000.0;
     /*************************************************/
     time_t timer;
     time(&timer); // get the date
 
     check_params();
-
-    printf("*******************************************************************\n");
-    printf(" %s", ctime(&timer));
-    printf("*******************************************************************\n");
-    printf(" INTENSITY (1st): %f TW \n", intensity0*pow(10.0, -12.0));
-    printf(" INTENSITY (2nd): omega1 = %f TW , omega2 = %f TW\n", intensity1*pow(10.0, -12.0), rat*intensity1*pow(10.0, -12.0));
-    printf(" PULSE DURATION : FWHM = %f fs\n", FWHM*pow(10.0, 15.0));
-    printf(" RELATIVE PHASE : phi = %f*pi\n", phase);
-
-//    FILE *fp1, *fp2, *fp3, *fp4;
-
-    FILE* fp1 = std::fopen("cos2.txt", "w");  // make a text file to write the final results
-    FILE* fp2 = std::fopen("cos.txt", "w");
-    FILE* fp3 = std::fopen("output.txt", "w");
-    FILE* fp4 = std::fopen("pulseenvelope.txt", "w");
-    FILE* finpop = std::fopen("finpop.txt", "w");
-
-    // output file
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, " CO_ORIENTATION_VER4-1_131001\n by K.Sonoda\n 01 Oct. 2013\n");
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, "-- DATE --\n");
-    fprintf(fp3, " %s", ctime(&timer));
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, "-- VALIDITY --\n");
-
-
-    /**initial condition**/
-    for (N = 0; N < SERIES; N++) // time series of the alignment and orientation parameter
-    {
-        cos[N] = 0.0;  // set the value of <costheta> zero
-        cos2[N] = 0.0;  // set the value of <cos^2theta> zero
-    }
-
-    double P; // statistic weight
-
     Jcalc = calculate_initial_population(T);
+
+    std::cout << "*******************************************************************\n";
+    std::cout << ctime(&timer);
+    std::cout << "*******************************************************************\n";
+    std::cout << " INTENSITY (1st): " << intensity0*pow(10.0, -12.0) << " TW \n";
+    std::cout << " INTENSITY (2nd): omega1 = " << intensity1*pow(10.0, -12.0) << " TW , omega2 = " << rat*intensity1*pow(10.0, -12.0) << " TW\n";
+    std::cout << " PULSE DURATION : FWHM = " << FWHM*pow(10.0, 15.0) << " fs\n";
+    std::cout << " RELATIVE PHASE : phi = " << phase << "*pi\n";
+    std::cout << " TEMPERATURE    : " << T << " K\n";
+    std::cout << " Jcalc          : " << Jcalc << "\n";
+    std::cout << "*******************************************************************\n";
+
+    std::ofstream file_cos2("cos2.txt");
+    std::ofstream file_cos("cos.txt");
+    std::ofstream file_output("output.txt");
+    std::ofstream file_finpop("finpop.txt");
     
-     /**initialization of final population**/
-    for (int J = 0; J<NUM; J++)
-    {
-        cfin[J] = 0.0;
-    }
-    // end of the initialization of final population
+    
+    // output file
+    file_output << "*******************************************************************\n";
+    file_output << "-- DATE --\n";
+    file_output << ctime(&timer) << "\n";
+    file_output << "*******************************************************************\n";
+    file_output << "-- LOG --\n";
 
-    printf(" TEMPERATURE    : %f K\n", T);
-    printf(" Jcalc          : %d\n", Jcalc);
-    printf("*******************************************************************\n");
-
-    /***beginning of the calculation***/
+    /*beginning of the calculation*/
     start = clock(); // calculation time
 
     for (int Jint = 0; Jint <= Jcalc; Jint++)
@@ -129,9 +106,9 @@ int main()
             for (t = tmin; t <= tmax; t = t + dt)
             {
                 //initialization
-                align = 0.0; // align: alignment parameter
+                align = 0.0; // alignment parameter
                 asum = 0.0;
-                orient = 0.0; // orient: orientaion parameter
+                orient = 0.0; // orientaion parameter
                 osum = 0.0;
                 NORM = 0.0;
                 Imcos2 = 0.0;
@@ -177,11 +154,19 @@ int main()
                     for (int j = 0; j <= Jmax; j++)
                     {
                         c[j] = c[j] + (k[0][j] + 2.0*k[1][j] + 2.0*k[2][j] + k[3][j]) / 6.0;
+                        NORM = norm(c[j]) + NORM;
                     }
                 } // end of the RK calculation
-
-                else // long duration step without RK calculation in the region that the laser pulse does not exist
+                else // Large step without RK calculation in the region where the laser pulse is extremely weak or does not exist.
+                {
                     dt = dtlong;
+                    
+                    // Norm calculation
+                    for (int j = 0; j <= Jmax; j++)
+                    {
+                        NORM = norm(c[j]) + NORM;
+                    }
+                }
 
                 // <cos^2theta> calculation
                 for (int j = 0; j <= Jmax; j++)
@@ -197,13 +182,11 @@ int main()
                             asum = conj(c[j])*c[j] * d2J0(double(j), double(M)) + conj(c[j])*c[j - 2] * d2j2(double(j), double(M))*exp(-I * (Erot(double(j) - 2.0) - Erot(double(j))) * (t + dt) / hbar);
                         align = asum + align;
                     }
-
                     else if (j == 0 || j == 1)
                     {
                         asum = conj(c[j])*c[j] * d2J0(double(j), double(M)) + conj(c[j])*c[j + 2] * d2J2(double(j), double(M))*exp(-I * (Erot(double(j) + 2.0) - Erot(double(j))) * (t + dt) / hbar);
                         align = asum + align;
                     }
-
                     else
                     {
                         if (j - 2 < abs(M))
@@ -213,9 +196,6 @@ int main()
                         align = asum + align;
                     }
                 }// end of the <cos^2theta> calculation
-
-                 //imaginary part of <cos^2theta>
-                Imcos2 = imag(align);
 
                 // <costheta> calculation
                 for (int j = 0; j <= Jmax; j++)
@@ -248,25 +228,19 @@ int main()
                     }
                 }// end of the <costheta> calculation
 
+                //imaginary part of <cos^2theta>
+                Imcos2 = imag(align);
                  //imaginary part of <costheta>
                 Imcos = imag(orient);
 
-                //norm calculation
-                for (int j = 0; j <= Jmax; j++)
-                {
-                    NORM = norm(c[j]) + NORM;
-                }// end of the norm calculation
-
                 if (T == 0.0)
                 {
-                    printf("%f\t%f\t%f\t%f\t%f\n", (t + dt)*pow(10.0, 15.0), real(orient), abs(Imcos), abs(Imcos2), NORM);
+                    std::cout << (t + dt)*pow(10.0, 15.0) << "\t" << real(orient) << "\t" << abs(Imcos) << "\t" << abs(Imcos2) << "\t" << NORM << "\n";
                 }
 
                 // get alignment and orientation parameters
                 if (Ethr < (E1w(t) + E2w(t))) // at small step RK calculation
                 {
-                    fprintf(fp4, "%f\t%f\n", (t + dt) / Trot, 0.5* (E1w(t + dt) + E2w(t + dt))*(E1w(t + dt) + E2w(t + dt))*epsilon*vc * pow(10.0, -12.0)* pow(10.0, -4.0));
-
                     if (step%STEP == 0 && STEP <= step) // data aquisition per #STEP steps
                     {
                         cos2[N] = P * real(align) + cos2[N];  // time series of <cos^2theta>
@@ -276,11 +250,8 @@ int main()
                         if (Jint == Jcalc && M == Jint)
                         {
                             // write the results in txt file
-                            //                            fprintf(fp1,"%f\t%f\n",(t+dt)*pow(10.0,15.0),cos2[N]) ;
-                            //                            fprintf(fp2,"%f\t%f\n",(t+dt)*pow(10.0,15.0),cos[N]) ;
-                            fprintf(fp1, "%f\t%f\n", (t + dt) / Trot, cos2[N]);
-                            fprintf(fp2, "%f\t%f\n", (t + dt) / Trot, cos[N]);
-                            //                            fprintf(fp4, "%f\t%f\n", (t + dt) / Trot, E1w(t+dt)+ E2w(t + dt));
+                            file_cos2 << (t + dt) / Trot << "\t" << cos2[N] << "\n";
+                            file_cos << (t + dt) / Trot << "\t" << cos[N] << "\n";
 
                             // obtain the maximum value of <cos^2theta>
                             if (cos2max <= cos2[N])
@@ -315,17 +286,12 @@ int main()
                     cos2[N] = P * real(align) + cos2[N];  // time series of <cos^2theta>
                     cos[N] = P * real(orient) + cos[N];  // time series of <costheta>
 
-                    fprintf(fp4, "%f\t%f\n", (t + dt) / Trot, 0.5* (E1w(t + dt) + E2w(t + dt)) * (E1w(t + dt) + E2w(t + dt)) * epsilon * vc * pow(10.0, -12.0) * pow(10.0, -4.0));
-
                     // at the end of the calculation...
                     if (Jint == Jcalc && M == Jint)
                     {
                         // write the results in txt file
-                        //                        fprintf(fp1,"%f\t%f\n",(t+dt)*pow(10.0,15.0),cos2[N]) ;
-                        //                        fprintf(fp2,"%f\t%f\n",(t+dt)*pow(10.0,15.0),cos[N]) ;
-                        fprintf(fp1, "%f\t%f\n", (t + dt) / Trot, cos2[N]);
-                        fprintf(fp2, "%f\t%f\n", (t + dt) / Trot, cos[N]);
-                        //                        fprintf(fp4, "%f\t%f\n", (t + dt) / Trot, E1w(t + dt) + E2w(t + dt));
+                        file_cos2 << (t + dt) / Trot << "\t" << cos2[N] << "\n";
+                        file_cos << (t + dt) / Trot << "\t" << cos[N] << "\n";
 
                         // obtain the maximum value of <cos^2theta>
                         if ((0 <= t) && (cos2max <= cos2[N]))
@@ -344,14 +310,6 @@ int main()
                     N = N + 1; //next step data
                 }
                 // end of the getting the alignment and orientation parameters
-
-                // avoid fatal error
-                if (SERIES <= N) // if N exceed the number of SERIES, kill the program.
-                {
-                    printf("\n\n - ERROR! - \n\n");
-                    return 1;
-                }
-
             }// end of the time evolution
 
              // final population calculation
@@ -359,11 +317,11 @@ int main()
             {
                 cfin[j] = P * norm(c[j]) + cfin[j];
                 if (Jint == Jcalc && M == Jint) // at the end of the calculation, write the results in txt file
-                    fprintf(finpop, "%d\t%f\n", j, cfin[j]);
+                    file_finpop << j << "\t" << cfin[j] << "\n";
             }// end of the final population calculation
 
-            printf("J%dM%d\tN=%f Im(cos)=%f Im(cos2)=%f\n", Jint, M, NORM, abs(Imcos), abs(Imcos2));
-            fprintf(fp3, " J%dM%d\tN=%f Im(cos)=%f Im(cos2)=%f\n", Jint, M, NORM, abs(Imcos), abs(Imcos2));
+            std::cout << "J" << Jint << "M" << M << "\tN=" << NORM << "\tIm(cos)=" << abs(Imcos) << "\tIm(cos2)=" << abs(Imcos2) << "\n";
+            file_output << " J" << Jint << "M" << M << "\tN=" << NORM << "\tIm(cos)=" << abs(Imcos) << "\tIm(cos2)=" << abs(Imcos2) << "\n";
 
         }// end of the calculation of all M for specific J
 
@@ -373,54 +331,50 @@ int main()
     calctime = (double(end - start)) / CLOCKS_PER_SEC; // calculation time (seconds)
 
     // output the maximum value of <costheta>
-    printf("-----------------------\n");
-    printf("calculation time = %f sec\n", calctime);
-    printf("<cos>max  = %f\n", cosmax);
-    printf("<cos>min  = %f\n", cosmin);
-    printf("<cos2>max = %f\n", cos2max);
-    printf("<cos2>t=0 = %f\n", cos20);
-
+    std::cout << "-----------------------\n";
+    std::cout << "calculation time = " << calctime << " sec.\n";
+    std::cout << "<cos>max  = " << cosmax << "\n";
+    std::cout << "<cos>min  = " << cosmin << "\n";
+    std::cout << "<cos2>max = " << cos2max << "\n";
+    std::cout << "<cos2>t=0 = " << cos20 << "\n";
 
     // write the conditions and results in txt file
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, "-- LASER PULSE --\n");
-    fprintf(fp3, " -first pulse\n");
-    fprintf(fp3, " INTENSITY      : %f TW\n", intensity0*pow(10.0, -12.0));
-    fprintf(fp3, " PULSE DURATION : FWHM = %f fs\n", FWHM*pow(10.0, 15.0));
-    //    fprintf(fp3," DELAY          : %f ps (%f*Trot)\n", delay*pow(10.0,12.0) , n );
-    fprintf(fp3, " -second pulse\n");
-    fprintf(fp3, " INTENSITY      : omega1 = %f TW , omega2 = %f TW\n", intensity1*pow(10.0, -12.0), rat*intensity1*pow(10.0, -12.0));
-    fprintf(fp3, " PULSE DURATION : FWHM = %f fs\n", FWHM*pow(10.0, 15.0));
-    fprintf(fp3, " RELATIVE PHASE : phi = %f*pi\n", phase);
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, "-- TEMPERATURE --\n");
-    fprintf(fp3, " TEMPERATURE    : %f K\n", T);
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, "-- ROTATIONAL LEVEL --\n");
-    fprintf(fp3, " Jcalc          : %d\n", Jcalc);
-    fprintf(fp3, " Jmax           : %d\n", Jmax);
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, "-- TIME --\n");
-    fprintf(fp3, " tmin           : %f fs\n", tmin*pow(10.0, 15.0));
-    fprintf(fp3, " tmax           : %f fs\n", tmax*pow(10.0, 15.0));
-    fprintf(fp3, " dt             : %f fs\n", dtref*pow(10.0, 15.0));
-    fprintf(fp3, " dtlong         : %f fs\n", dtlong*pow(10.0, 15.0));
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, "-- RESULTS --\n");
-    fprintf(fp3, " <cos>max       : %f\n", cosmax);
-    fprintf(fp3, " <cos>min       : %f\n", cosmin);
-    fprintf(fp3, " <cos^2>max     : %f\n", cos2max);
-    fprintf(fp3, " <cos^2>t=0     : %f\n", cos20);
-    fprintf(fp3, "*******************************************************************\n");
-    fprintf(fp3, "-- CALCULATION TIME --\n");
-    fprintf(fp3, " CALC. TIME     : %f sec\n", calctime);
-    fprintf(fp3, "*******************************************************************\n");
+    file_output << "*******************************************************************\n";
+    file_output << "-- LASER PULSE --\n";
+    file_output << " -first pulse\n";
+    file_output << " INTENSITY      : " << intensity0*pow(10.0, -12.0) << " TW\n";
+    file_output << " PULSE DURATION : FWHM = " << FWHM*pow(10.0, 15.0) << " fs\n";
+    file_output << " -second pulse\n";
+    file_output << " INTENSITY      : omega1 = " << intensity1*pow(10.0, -12.0) << " TW , omega2 = " << rat*intensity1*pow(10.0, -12.0) << " TW\n";
+    file_output << " PULSE DURATION : FWHM = " << FWHM*pow(10.0, 15.0) << " fs\n";
+    file_output << " RELATIVE PHASE : phi = " << phase << "*pi\n";
+    file_output << " DELAY          : " <<  delay01*pow(10.0,12.0) << " ps (" << n01 << "Trot)\n";
+    file_output << "*******************************************************************\n";
+    file_output << "-- TEMPERATURE --\n";
+    file_output << " TEMPERATURE    : " << T << " K\n";
+    file_output << "*******************************************************************\n";
+    file_output << "-- ROTATIONAL LEVEL --\n";
+    file_output << " Jcalc          : " << Jcalc << "\n";
+    file_output << " Jmax           : " << Jmax << "\n";
+    file_output << "*******************************************************************\n";
+    file_output << "-- TIME --\n";
+    file_output << " tmin           : " << tmin*pow(10.0, 15.0) << " fs\n";
+    file_output << " tmax           : " << tmax*pow(10.0, 15.0) << " fs\n";
+    file_output << " dt             : " << dtref*pow(10.0, 15.0) << " fs\n";
+    file_output << " dtlong         : " << dtlong*pow(10.0, 15.0) << " fs\n";
+    file_output << "*******************************************************************\n";
+    file_output << "-- RESULTS --\n";
+    file_output << " <cos>max       : " << cosmax << " \n";
+    file_output << " <cos>min       : " << cosmin << " \n";
+    file_output <<  " <cos^2>max     : " << cos2max << "\n";
+    file_output << "*******************************************************************\n";
+    file_output << "-- CALCULATION TIME --\n";
+    file_output << " CALC. TIME     : " << calctime << " sec\n";
+    file_output << "*******************************************************************\n";
     
-    std::fclose(fp1);
-    std::fclose(fp2);
-    std::fclose(fp3);
-    std::fclose(fp4);
-    std::fclose(finpop);
+    file_cos2.close();
+    file_cos.close();
+    file_finpop.close();
 
     return 0;
 
