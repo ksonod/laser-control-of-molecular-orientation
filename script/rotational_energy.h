@@ -65,8 +65,7 @@ int calculate_initial_population(double T)
     /*TODO: Move this parameter to somewhere*/
     double thr = 0.0001;   // threshold of rotationl distribution
  
-    FILE *intpop;
-    intpop = fopen("intpop.txt", "w");
+    FILE* intpop = std::fopen("intpop.txt", "w");
     
     if (T == 0.0)
     {
@@ -100,7 +99,7 @@ int calculate_initial_population(double T)
     }// end of the Jcalc calculation at the finite temperature
      // end of the calculation of Jcalc and initial population
 
-    fclose(intpop);
+    std::fclose(intpop);
     
     return Jcalc;
 }

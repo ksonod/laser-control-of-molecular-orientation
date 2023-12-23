@@ -1,7 +1,6 @@
 /*
-Molecular Orientation Simulator
- 
-This is a simulator to calculate laser-induced molecular orientation dynamics.
+LASER-INDUCED MOLECULAR ORIENTATION SIMULATOR
+This is a simulator to calculate molecular orientation dynamics induced by two-color intense femtosecond laser pulses.
 */
 
 #include <iostream>
@@ -33,11 +32,16 @@ int main()
     double cos20 = 0.0; // <cos^2theta> at t = 0
     clock_t start, end; // calculation time
     double calctime; // calculation time
-    std::complex<double> c[NUM], k[4][NUM], k0[NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).   k[RK][level]
+//    std::complex<double> k[4][NUM], k0[NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).   k[RK][level]
+    std::complex<double> c[NUM], k[4][NUM], k0[NUM]; //c[] is coefficient of wavefnction.If you change Jmax,you should change size of c[](Jmax/2+1).
     double cfin[NUM];
     std::complex<double> cj3 = (0.0, 0.0), cj2 = (0.0, 0.0), cj1 = (0.0, 0.0), cJ0 = (0.0, 0.0), cJ1 = (0.0, 0.0), cJ2 = (0.0, 0.0), cJ3 = (0.0, 0.0);
     std::complex<double> kj3 = (0.0, 0.0), kj2 = (0.0, 0.0), kj1 = (0.0, 0.0), kJ0 = (0.0, 0.0), kJ1 = (0.0, 0.0), kJ2 = (0.0, 0.0), kJ3 = (0.0, 0.0);
 
+    std::complex<double> align = (0.0, 0.0), asum = (0.0, 0.0); // align: alignment parameter
+    std::complex<double> orient = (0.0, 0.0), osum = (0.0, 0.0); // orient: orientaion parameter
+
+    
     double T = 0.8; // temperature in K unit
 
     double t;  // time
@@ -62,12 +66,13 @@ int main()
     printf(" PULSE DURATION : FWHM = %f fs\n", FWHM*pow(10.0, 15.0));
     printf(" RELATIVE PHASE : phi = %f*pi\n", phase);
 
-    FILE *fp1, *fp2, *fp3, *fp4;
+//    FILE *fp1, *fp2, *fp3, *fp4;
 
-    fp1 = fopen("cos2.txt", "w");  // make a text file to write the final results
-    fp2 = fopen("cos.txt", "w");
-    fp3 = fopen("output.txt", "w");
-    fp4 = fopen("pulseenvelope.txt", "w");
+    FILE* fp1 = std::fopen("cos2.txt", "w");  // make a text file to write the final results
+    FILE* fp2 = std::fopen("cos.txt", "w");
+    FILE* fp3 = std::fopen("output.txt", "w");
+    FILE* fp4 = std::fopen("pulseenvelope.txt", "w");
+    FILE* finpop = std::fopen("finpop.txt", "w");
 
     // output file
     fprintf(fp3, "*******************************************************************\n");
@@ -88,8 +93,6 @@ int main()
 
     double P; // statistic weight
 
-    FILE *finpop;
-    finpop = fopen("finpop.txt", "w");
     Jcalc = calculate_initial_population(T);
     
      /**initialization of final population**/
@@ -130,443 +133,53 @@ int main()
             for (t = tmin; t <= tmax; t = t + dt)
             {
                 //initialization
-                std::complex<double> align = (0.0, 0.0), asum = (0.0, 0.0); // align: alignment parameter
-                std::complex<double> orient = (0.0, 0.0), osum = (0.0, 0.0); // orient: orientaion parameter
+                align = (0.0, 0.0); // align: alignment parameter
+                asum = (0.0, 0.0);
+                orient = (0.0, 0.0); // orient: orientaion parameter
+                osum = (0.0, 0.0);
                 NORM = 0.0, Imcos2 = 0.0, Imcos = 0.0;
                 dt = dtref; // small step
 
                 if (Ethr < (E1w(t) + E2w(t))) // Runge-Kutta calculation in the region that the effect of laser pulse is important
                 {
-
                     // calculation of k[0][]
                     for (int j = 0; j <= Jmax; j++)
                     {
-                        cj3 = c[j - 3];
-                        cj2 = c[j - 2];
-                        cj1 = c[j - 1];
-                        cJ0 = c[j];
-                        cJ1 = c[j + 1];
-                        cJ2 = c[j + 2];
-                        cJ3 = c[j + 3];
-
-                        // calculation of k[0][]
-                        if (j < abs(M)) // impossible
-                            k[0][j] = (0.0, 0.0);
-
-                        else if (2 < j)
-                        {
-                            if (j == Jmax)
-                            {
-                                cJ1 = (0.0, 0.0);
-                                cJ2 = (0.0, 0.0);
-                                cJ3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (Jmax - 1))
-                            {
-                                cJ2 = (0.0, 0.0);
-                                cJ3 = (0.0, 0.0);
-                            }
-
-
-                            else if (j == (Jmax - 2))
-                                cJ3 = (0.0, 0.0);
-
-                            else;
-
-
-                            if (j == abs(M))
-                            {
-                                cj1 = (0.0, 0.0);
-                                cj2 = (0.0, 0.0);
-                                cj3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (abs(M) + 1))
-                            {
-                                cj2 = (0.0, 0.0);
-                                cj3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (abs(M) + 2))
-                                cj3 = (0.0, 0.0);
-
-                            else;
-
-                            k[0][j] = dt * RK(t, j, M, cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3);
-
-                        } // end of the k[0][j] calculation for 2<j
-                        else if (j <= 2)
-                        {
-                            if (j == abs(M))
-                            {
-                                cj1 = (0.0, 0.0);
-                                cj2 = (0.0, 0.0);
-                            }
-
-                            else if (j == (abs(M) + 1))
-                                cj2 = (0.0, 0.0);
-
-                            if (j == 2)
-                                k[0][j] = dt * RK(t, j, M, 0.0, cj2, cj1, cJ0, cJ1, cJ2, cJ3);
-
-                            else if (j == 1)
-                                k[0][j] = dt * RK(t, j, M, 0.0, 0.0, cj1, cJ0, cJ1, cJ2, cJ3);
-
-                            else if (j == 0)
-                                k[0][j] = dt * RK(t, j, M, 0.0, 0.0, 0.0, cJ0, cJ1, cJ2, cJ3);
-
-                        }    // end of the k[0][j] calculation for j <= 2
+//                        cj3 = (0.0, 0.0), cj2 = (0.0, 0.0), cj1 = (0.0, 0.0), cJ0 = (0.0, 0.0), cJ1 = (0.0, 0.0), cJ2 = (0.0, 0.0), cJ3 = (0.0, 0.0);
+                        auto [cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3] = assign_coeff(c, j, M);
+                        k[0][j] = dt * RK(t, j, M, cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3);
                     }// end of the k[0][j] calculation
 
                      // calculation of k[1][]
                     for (int j = 0; j <= Jmax; j++)
                     {
-                        cj3 = c[j - 3];
-                        cj2 = c[j - 2];
-                        cj1 = c[j - 1];
-                        cJ0 = c[j];
-                        cJ1 = c[j + 1];
-                        cJ2 = c[j + 2];
-                        cJ3 = c[j + 3];
-                        kj3 = k[0][j - 3];
-                        kj2 = k[0][j - 2];
-                        kj1 = k[0][j - 1];
-                        kJ0 = k[0][j];
-                        kJ1 = k[0][j + 1];
-                        kJ2 = k[0][j + 2];
-                        kJ3 = k[0][j + 3];
+                        auto[cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3] = assign_coeff(c, j, M);
+                        auto[kj3, kj2, kj1, kJ0, kJ1, kJ2, kJ3] = assign_coeff(k[0], j, M);
 
-                        if (j < abs(M)) // impossible
-                            k[1][j] = (0.0, 0.0);
-
-                        else if (2 < j)
-                        {
-                            if (j == Jmax)
-                            {
-                                cJ1 = (0.0, 0.0);
-                                cJ2 = (0.0, 0.0);
-                                cJ3 = (0.0, 0.0);
-                                kJ1 = (0.0, 0.0);
-                                kJ2 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (Jmax - 1))
-                            {
-                                cJ2 = (0.0, 0.0);
-                                cJ3 = (0.0, 0.0);
-                                kJ2 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (Jmax - 2))
-                            {
-                                cJ3 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-                            else;
-
-
-                            if (j == abs(M))
-                            {
-                                cj1 = (0.0, 0.0);
-                                cj2 = (0.0, 0.0);
-                                cj3 = (0.0, 0.0);
-                                kj1 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-
-                            else if (j == (abs(M) + 1))
-                            {
-                                cj2 = (0.0, 0.0);
-                                cj3 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-
-                            else if (j == (abs(M) + 2))
-                            {
-                                cj3 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-                            else;
-
-                            k[1][j] = dt * RK(t + 0.5 * dt, j, M, cj3 + kj3 * 0.5, cj2 + kj2 * 0.5, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
-
-                        } // end of the k[1][j] calculation for 2<j
-
-
-                        else if (j <= 2)
-                        {
-
-                            if (j == abs(M))
-                            {
-                                cj1 = (0.0, 0.0);
-                                cj2 = (0.0, 0.0);
-                                kj1 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                            }
-
-                            else if (j == (abs(M) + 1))
-                            {
-                                cj2 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                            }
-
-                            if (j == 2)
-                                k[1][j] = dt * RK(t + 0.5 * dt, j, M, 0.0, cj2 + kj2 * 0.5, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
-
-                            else if (j == 1)
-                                k[1][j] = dt * RK(t + 0.5 * dt, j, M, 0.0, 0.0, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
-
-                            else if (j == 0)
-                                k[1][j] = dt * RK(t + 0.5 * dt, j, M, 0.0, 0.0, 0.0, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
-                        }    // end of the k[1][j] calculation for j <= 2
+                        k[1][j] = dt * RK(t + 0.5 * dt, j, M, cj3 + kj3 * 0.5, cj2 + kj2 * 0.5, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
                     }// end of the k[1][j] calculation
 
                      // calculation of k[2][]
                     for (int j = 0; j <= Jmax; j++)
                     {
-                        cj3 = c[j - 3];
-                        cj2 = c[j - 2];
-                        cj1 = c[j - 1];
-                        cJ0 = c[j];
-                        cJ1 = c[j + 1];
-                        cJ2 = c[j + 2];
-                        cJ3 = c[j + 3];
+                        auto[cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3] = assign_coeff(c, j, M);
+                        auto[kj3, kj2, kj1, kJ0, kJ1, kJ2, kJ3] = assign_coeff(k[1], j, M);
 
-                        kj3 = k[1][j - 3];
-                        kj2 = k[1][j - 2];
-                        kj1 = k[1][j - 1];
-                        kJ0 = k[1][j];
-                        kJ1 = k[1][j + 1];
-                        kJ2 = k[1][j + 2];
-                        kJ3 = k[1][j + 3];
-
-                        if (j < abs(M)) // impossible
-                            k[2][j] = (0.0, 0.0);
-
-                        else if (2 < j)
-                        {
-                            if (j == Jmax)
-                            {
-                                cJ1 = (0.0, 0.0);
-                                cJ2 = (0.0, 0.0);
-                                cJ3 = (0.0, 0.0);
-                                kJ1 = (0.0, 0.0);
-                                kJ2 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-
-
-                            else if (j == (Jmax - 1))
-                            {
-                                cJ2 = (0.0, 0.0);
-                                cJ3 = (0.0, 0.0);
-                                kJ2 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (Jmax - 2))
-                            {
-                                cJ3 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-                            else;
-
-                            if (j == abs(M))
-                            {
-                                cj1 = (0.0, 0.0);
-                                cj2 = (0.0, 0.0);
-                                cj3 = (0.0, 0.0);
-                                kj1 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (abs(M) + 1))
-                            {
-                                cj2 = (0.0, 0.0);
-                                cj3 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-
-                            else if (j == (abs(M) + 2))
-                            {
-                                cj3 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-                            else;
-
-                            k[2][j] = dt * RK(t + 0.5 * dt, j, M, cj3 + kj3 * 0.5, cj2 + kj2 * 0.5, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
-
-                        } // end of the k[2][j] calculation for 2<j
-
-
-                        else if (j <= 2)
-                        {
-                            if (j == abs(M))
-                            {
-                                cj1 = (0.0, 0.0);
-                                cj2 = (0.0, 0.0);
-                                kj1 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                            }
-
-
-                            else if (j == (abs(M) + 1))
-                            {
-                                cj2 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                            }
-
-
-                            if (j == 2)
-                                k[2][j] = dt * RK(t + 0.5 * dt, j, M, 0.0, cj2 + kj2 * 0.5, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
-
-                            else if (j == 1)
-                                k[2][j] = dt * RK(t + 0.5 * dt, j, M, 0.0, 0.0, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
-
-                            else if (j == 0)
-                                k[2][j] = dt * RK(t + 0.5 * dt, j, M, 0.0, 0.0, 0.0, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
-
-                        }    // end of the k[2][j] calculation for j <= 2
-
+                        k[2][j] = dt * RK(t + 0.5 * dt, j, M, cj3 + kj3 * 0.5, cj2 + kj2 * 0.5, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
                     }// end of the k[2][j] calculation
-
 
                      // calculation of k[3][]
                     for (int j = 0; j <= Jmax; j++)
                     {
-                        cj3 = c[j - 3];
-                        cj2 = c[j - 2];
-                        cj1 = c[j - 1];
-                        cJ0 = c[j];
-                        cJ1 = c[j + 1];
-                        cJ2 = c[j + 2];
-                        cJ3 = c[j + 3];
-
-                        kj3 = k[2][j - 3];
-                        kj2 = k[2][j - 2];
-                        kj1 = k[2][j - 1];
-                        kJ0 = k[2][j];
-                        kJ1 = k[2][j + 1];
-                        kJ2 = k[2][j + 2];
-                        kJ3 = k[2][j + 3];
-
-
-                        if (j < abs(M)) // impossible
-                            k[2][j] = (0.0, 0.0);
-
-                        else if (2 < j)
-                        {
-                            if (j == Jmax)
-                            {
-                                cJ1 = (0.0, 0.0);
-                                cJ2 = (0.0, 0.0);
-                                cJ3 = (0.0, 0.0);
-                                kJ1 = (0.0, 0.0);
-                                kJ2 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (Jmax - 1))
-                            {
-                                cJ2 = (0.0, 0.0);
-                                cJ3 = (0.0, 0.0);
-                                kJ2 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (Jmax - 2))
-                            {
-                                cJ3 = (0.0, 0.0);
-                                kJ3 = (0.0, 0.0);
-                            }
-
-                            else;
-
-                            if (j == abs(M))
-                            {
-                                cj1 = (0.0, 0.0);
-                                cj2 = (0.0, 0.0);
-                                cj3 = (0.0, 0.0);
-                                kj1 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-
-                            else if (j == (abs(M) + 1))
-                            {
-                                cj2 = (0.0, 0.0);
-                                cj3 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-                            else if (j == (abs(M) + 2))
-                            {
-                                cj3 = (0.0, 0.0);
-                                kj3 = (0.0, 0.0);
-                            }
-
-                            else;
-
-                            k[3][j] = dt * RK(t + dt, j, M, cj3 + kj3, cj2 + kj2, cj1 + kj1, cJ0 + kJ0, cJ1 + kJ1, cJ2 + kJ2, cJ3 + kJ3);
-
-                        } // end of the k[3][j] calculation for 2<j
-
-
-                        else if (j <= 2)
-                        {
-                            if (j == abs(M))
-                            {
-                                cj1 = (0.0, 0.0);
-                                cj2 = (0.0, 0.0);
-                                kj1 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                            }
-
-
-                            else if (j == (abs(M) + 1))
-                            {
-                                cj2 = (0.0, 0.0);
-                                kj2 = (0.0, 0.0);
-                            }
-
-
-
-                            if (j == 2)
-                                k[3][j] = dt * RK(t + dt, j, M, 0.0, cj2 + kj2, cj1 + kj1, cJ0 + kJ0, cJ1 + kJ1, cJ2 + kJ2, cJ3 + kJ3);
-
-                            else if (j == 1)
-                                k[3][j] = dt * RK(t + dt, j, M, 0.0, 0.0, cj1 + kj1, cJ0 + kJ0, cJ1 + kJ1, cJ2 + kJ2, cJ3 + kJ3);
-
-                            else if (j == 0)
-                                k[3][j] = dt * RK(t + dt, j, M, 0.0, 0.0, 0.0, cJ0 + kJ0, cJ1 + kJ1, cJ2 + kJ2, cJ3 + kJ3);
-
-                        }    // end of the k[3][j] calculation for j <= 2
-
+                        auto[cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3] = assign_coeff(c, j, M);
+                        auto[kj3, kj2, kj1, kJ0, kJ1, kJ2, kJ3] = assign_coeff(k[2], j, M);
+                        k[3][j] = dt * RK(t + dt, j, M, cj3 + kj3, cj2 + kj2, cj1 + kj1, cJ0 + kJ0, cJ1 + kJ1, cJ2 + kJ2, cJ3 + kJ3);
                     }// end of the k[3][j] calculation
-
 
                     for (int j = 0; j <= Jmax; j++)
                     {
                         c[j] = c[j] + (k[0][j] + 2.0*k[1][j] + 2.0*k[2][j] + k[3][j]) / 6.0;
                     }
-
                 } // end of the RK calculation
 
                 else // long duration step without RK calculation in the region that the laser pulse does not exist
@@ -646,11 +259,9 @@ int main()
                     NORM = norm(c[j]) + NORM;
                 }// end of the norm calculation
 
-
                 if (T == 0.0)
                 {
-                    printf("%f\t%f\t%f\t%f\t%f\n", (t + dt)*pow(10.0, 15.0), real(orient), abs(Imcos), abs(Imcos2), NORM);  // orientation, alignment check
-                                                                                                                            //                    printf("%f\t%f\t%f\t%f\t%f\n",(t+dt)*pow(10.0,15.0), real(align) , real(orient) , abs(Imcos2) , NORM );  // orientation, alignment check
+                    printf("%f\t%f\t%f\t%f\t%f\n", (t + dt)*pow(10.0, 15.0), real(orient), abs(Imcos), abs(Imcos2), NORM);
                 }
 
                 // get alignment and orientation parameters
@@ -663,7 +274,7 @@ int main()
                         cos2[N] = P * real(align) + cos2[N];  // time series of <cos^2theta>
                         cos[N] = P * real(orient) + cos[N];  // time series of <costheta>
 
-                                                             // at the end of the calculation...
+                        // at the end of the calculation...
                         if (Jint == Jcalc && M == Jint)
                         {
                             // write the results in txt file
@@ -730,13 +341,11 @@ int main()
                         if (cos[N] <= cosmin)
                             cosmin = cos[N];
                     }
-
                     else;
 
                     N = N + 1; //next step data
                 }
                 // end of the getting the alignment and orientation parameters
-
 
                 // avoid fatal error
                 if (SERIES <= N) // if N exceed the number of SERIES, kill the program.
@@ -747,7 +356,6 @@ int main()
 
             }// end of the time evolution
 
-
              // final population calculation
             for (int j = 0; j <= Jmax; j++)
             {
@@ -755,7 +363,6 @@ int main()
                 if (Jint == Jcalc && M == Jint) // at the end of the calculation, write the results in txt file
                     fprintf(finpop, "%d\t%f\n", j, cfin[j]);
             }// end of the final population calculation
-
 
             printf("J%dM%d\tN=%f Im(cos)=%f Im(cos2)=%f\n", Jint, M, NORM, abs(Imcos), abs(Imcos2));
             fprintf(fp3, " J%dM%d\tN=%f Im(cos)=%f Im(cos2)=%f\n", Jint, M, NORM, abs(Imcos), abs(Imcos2));
@@ -765,10 +372,7 @@ int main()
     } // end of the all Jint calculation
 
     end = clock(); // calculation time
-
     calctime = (double(end - start)) / CLOCKS_PER_SEC; // calculation time (seconds)
-
-
 
     // output the maximum value of <costheta>
     printf("-----------------------\n");
@@ -813,6 +417,12 @@ int main()
     fprintf(fp3, "-- CALCULATION TIME --\n");
     fprintf(fp3, " CALC. TIME     : %f sec\n", calctime);
     fprintf(fp3, "*******************************************************************\n");
+    
+    std::fclose(fp1);
+    std::fclose(fp2);
+    std::fclose(fp3);
+    std::fclose(fp4);
+    std::fclose(finpop);
 
     return 0;
 

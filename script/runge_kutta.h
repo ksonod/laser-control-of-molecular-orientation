@@ -24,5 +24,102 @@ std::complex<double> RK(double t, int J, int M, std::complex<double> Cj3, std::c
 }
 
 
+/*
+ This funcition considers allowed interactions between different J states.
+ */
+std::tuple<std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>> assign_coeff(std::complex<double> (&c)[NUM], int j, int M)
+{
+    std::complex<double> cj3 = (0.0, 0.0), cj2 = (0.0, 0.0), cj1 = (0.0, 0.0), cJ0 = (0.0, 0.0), cJ1 = (0.0, 0.0), cJ2 = (0.0, 0.0), cJ3 = (0.0, 0.0);
+
+    if (j >= abs(M))
+    {
+        cJ0 = c[j];
+
+        if (2 < j)
+        {
+            if (j == (Jmax - 1))
+            {
+                cJ1 = c[j+1];
+            }
+            else if (j == (Jmax - 2))
+            {
+                cJ1 = c[j+1];
+                cJ2 = c[j+2];
+            }
+            else;
+            {
+                cJ1 = c[j+1];
+                cJ2 = c[j+2];
+                cJ3 = c[j+3];
+            }
+
+
+            if (j == (abs(M) + 1))
+            {
+                cj1 = c[j-1];
+            }
+            else if (j == (abs(M) + 2))
+            {
+                cj1 = c[j-1];
+                cj2 = c[j-2];
+            }
+            else;
+            {
+                cj1 = c[j-1];
+                cj2 = c[j-2];
+                cj3 = c[j-3];
+            }
+        }
+        else  // j = 0, 1, 2
+        {
+            if (j == 2)
+                if (abs(M) == 2)
+                {
+                    cJ1 = c[j+1];
+                    cJ2 = c[j+2];
+                    cJ3 = c[j+3];
+                }
+                else if (abs(M) == 1)
+                {
+                    cj1 = c[j-1];
+                    cJ1 = c[j+1];
+                    cJ2 = c[j+2];
+                    cJ3 = c[j+3];
+                }
+                else if (M == 0)
+                {
+                    cj1 = c[j-1];
+                    cj2 = c[j-2];
+                    cJ1 = c[j+1];
+                    cJ2 = c[j+2];
+                    cJ3 = c[j+3];
+                }
+                else;
+            else if (j == 1)
+                if (abs(M) == 1)
+                {
+                    cJ1 = c[j+1];
+                    cJ2 = c[j+2];
+                    cJ3 = c[j+3];
+                }
+                else if (M == 0)
+                {
+                    cj1 = c[j-1];
+                    cJ1 = c[j+1];
+                    cJ2 = c[j+2];
+                    cJ3 = c[j+3];
+                }
+                else;
+            else  // j == 0
+            {
+                cJ1 = c[j+1];
+                cJ2 = c[j+2];
+                cJ3 = c[j+3];
+            }
+        }
+    }
+
+    return {cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3};
+}
 
 #endif /* runge_kutta_h */
