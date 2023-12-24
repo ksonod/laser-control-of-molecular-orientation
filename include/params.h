@@ -19,11 +19,6 @@ const double B = 6081.492475*(3.335641*pow(10.0, -5.0)); // rotational constant 
 const double D = 0.0; // centrifugal constant in cm^-1
 const double Trot = 1.0 / 200.0 / B / vc; // rotational period in sec unit
 
-/*
-|    delaym10      |     delay01     |
-pulsem1            pulse0            pulse1 (main pulse)
-omega              omoega          omega+2omega
-*/
 
 const double intensity0 = 20.0*pow(10.0, 12.0); // second pulse (sub pulse) intensity in W/cm^2 unit
 const double intensity1 = 30.0*pow(10.0, 12.0); // third pulse (main pulse) intensity in W/cm^2 unit
@@ -31,9 +26,17 @@ const double FWHM = 70.0*pow(10.0, -15.0); // FWHM in second unit
 const double phase = 0.0;  // relative phase of w and 2w     phi = phase * PI
 const double phi = phase * PI; // relative phase
 const double rat = 0.5; // intensity ratio I2w/Iw
-const double n01 = 0.242; // delay
-const double delay01 = n01 * Trot; // delay
+const double n_delay = 0.242; // delay
+const double t_delay = n_delay * Trot; // delay
 int Jmax = 75; //maximum value of J  < NUM
+
+
+double tmin = -2000 * pow(10.0, -15.0) - t_delay;
+double tmax = 200.0*pow(10.0, -12.0);
+double dt_small = 1.0*pow(10.0, -15.0);  // step
+double dt_large = 40.0*pow(10.0, -15.0);
+double Ethr = 600000.0;
+
 
 
 void check_params()
