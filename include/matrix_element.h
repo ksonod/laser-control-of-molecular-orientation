@@ -4,14 +4,14 @@
 
 double d1j1(double J, double M) // <JM|cos|J-1M>
 {
-    double a = (J + M)*(J - M) / (2.0 * J + 1.0) / (2.0 * J - 1.0);
-    double ret = sqrt(a);
-
-    if (J < abs(M) || J == 0)
+    if (J < abs(M) || J == 0){
         return 0.0;
-
-    else
+    }
+    else{
+        double a = (J + M)*(J - M) / (2.0 * J + 1.0) / (2.0 * J - 1.0);
+        double ret = sqrt(a);
         return ret;
+    }
 }
 
 

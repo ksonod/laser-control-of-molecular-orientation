@@ -1,10 +1,3 @@
-//
-//  expectation_values.h
-//  src
-//
-//  Created by Kotaro Sonoda on 24/12/2023.
-//
-
 #ifndef expectation_values_h
 #define expectation_values_h
 
@@ -49,13 +42,11 @@ std::complex<double> calculate_cos_expectation_value(std::complex<double> (&c)[n
 
     std::complex<double> orient = 0.0, osum = 0.0; // orient: orientaion parameter
 
-    for (int j = 0; j <= Jmax; j++)
-    {
+    for (int j = 0; j <= Jmax; j++){
         if (j < abs(M))
             osum = 0.0;
 
-        else if (j == Jmax) // no interaction with upper state
-        {
+        else if (j == Jmax){ // no interaction with upper state
             if (j == abs(M)) // no interaction
                 osum = 0.0;
             else // interaction with lower state(J=J-1)
@@ -63,14 +54,12 @@ std::complex<double> calculate_cos_expectation_value(std::complex<double> (&c)[n
             orient = osum + orient;
         }
 
-        else if (j == 0) // no interaction with lower state
-        {
+        else if (j == 0){ // no interaction with lower state
             osum = conj(c[j])*c[j + 1] * d1J1(double(j), double(M))*exp(-I * (Erot(double(j) + 1.0) - Erot(double(j))) * (t + dt) / hbar);
             orient = osum + orient;
         }
 
-        else
-        {
+        else{
             if (j == abs(M)) // no interaction with lower state
                 osum = conj(c[j])*c[j + 1] * d1J1(double(j), double(M))*exp(-I * (Erot(double(j) + 1.0) - Erot(double(j))) * (t + dt) / hbar);
             else

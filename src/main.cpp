@@ -16,13 +16,13 @@ This is a simulator to calculate molecular orientation dynamics induced by two-c
 
 
 int main(){
-    double P;  // Statistic weight
+    double rot_level_weight;  // Statistic weight
     int Jcalc;  // Jcalc is the maximum value of J in calculation
-    int N;  // Number of steps
+    int time_step_idx;  // Number of steps
     int step = 1;  // Steps in time evolution
     double cos[num_time_series_data] = {0};  // time series of <costheta>
     double cos2[num_time_series_data] = {0}; // time series of <cos2theta>
-    double norm_wp;  // Norm of wavepacket coefficients.
+    double norm_wp = 0.0;  // Norm of wavepacket coefficients.
     double cosmax = 0.0; // maximum value of <costheta>
     double cosmin = 0.0; // minimum value of <costheta>
     double cos2max = 0.0;  // maximum value of <cos^2theta>
@@ -30,8 +30,6 @@ int main(){
     double calctime;  // calculation time
     std::complex<double> c[num_rot_levels], k[4][num_rot_levels];  //c[] is coefficient of wavefunction.
     double cfin[num_rot_levels] = {0};
-    std::complex<double> cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3;
-    std::complex<double> kj3, kj2, kj1, kJ0, kJ1, kJ2, kJ3;
     std::complex<double> exp_cos2 = 0.0; // Expectation value of cos2 (alignment parameter)
     std::complex<double> exp_cos = 0.0; // Expectation value of cos (orientation parameter)
     
@@ -73,9 +71,9 @@ int main(){
     for (int Jint = 0; Jint <= Jcalc; Jint++){
         // M calculation
         for (int M = 0; M <= Jint; M++){
-            P = calculate_Mlevel_population(T, Jint, M);
+            rot_level_weight = calculate_Mlevel_population(T, Jint, M);
             
-            N = 0; // set the number of steps 0
+            time_step_idx = 0; // set the number of steps 0
             step = 1;
 
             //initialization of the population
@@ -86,8 +84,8 @@ int main(){
                 else
                     c[j] = std::complex<double>(0.0, 0.0);
             }
+            
             //time evolution
-
             for (t = tmin; t <= tmax; t = t + dt){
                 //initialization
                 norm_wp = 0.0;
@@ -96,45 +94,34 @@ int main(){
                 if (Ethr < (E1w(t) + E2w(t))){  // Runge-Kutta calculation in the region where the effect of laser pulse is important
                     // calculation of k[0][]
                     for (int j = 0; j <= Jmax; j++){
-                        auto [cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3] = assign_coeff(c, j, M);
-                        k[0][j] = dt * calc_schrodinger_equation(t, j, M, cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3);
+                        k[0][j] = dt * calc_schrodinger_equation(t, j, M, coef(c, j-3, M), coef(c, j-2, M), coef(c, j-1, M), coef(c, j, M), coef(c, j+1, M), coef(c, j+2, M), coef(c, j+3, M));
                     }
 
                      // calculation of k[1][]
                     for (int j = 0; j <= Jmax; j++){
-                        auto[cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3] = assign_coeff(c, j, M);
-                        auto[kj3, kj2, kj1, kJ0, kJ1, kJ2, kJ3] = assign_coeff(k[0], j, M);
+                        k[1][j] = dt * calc_schrodinger_equation(t + 0.5 * dt, j, M, coef(c, j-3, M) + coef(k[0], j-3, M) * 0.5, coef(c, j-2, M) + coef(k[0], j-2, M) * 0.5, coef(c, j-1, M) + coef(k[0], j-1, M) * 0.5, coef(c, j, M) + coef(k[0], j, M) * 0.5, coef(c, j+1, M) + coef(k[0], j+1, M) * 0.5, coef(c, j+2, M) + coef(k[0], j+2, M) * 0.5, coef(c, j+3, M) + coef(k[0], j+3, M) * 0.5);
 
-                        k[1][j] = dt * calc_schrodinger_equation(t + 0.5 * dt, j, M, cj3 + kj3 * 0.5, cj2 + kj2 * 0.5, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
                     }
 
                      // calculation of k[2][]
                     for (int j = 0; j <= Jmax; j++){
-                        auto[cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3] = assign_coeff(c, j, M);
-                        auto[kj3, kj2, kj1, kJ0, kJ1, kJ2, kJ3] = assign_coeff(k[1], j, M);
-
-                        k[2][j] = dt * calc_schrodinger_equation(t + 0.5 * dt, j, M, cj3 + kj3 * 0.5, cj2 + kj2 * 0.5, cj1 + kj1 * 0.5, cJ0 + kJ0 * 0.5, cJ1 + kJ1 * 0.5, cJ2 + kJ2 * 0.5, cJ3 + kJ3 * 0.5);
+                        k[2][j] = dt * calc_schrodinger_equation(t + 0.5 * dt, j, M, coef(c, j-3, M) + coef(k[1], j-3, M) * 0.5, coef(c, j-2, M) + coef(k[1], j-2, M) * 0.5, coef(c, j-1, M) + coef(k[1], j-1, M) * 0.5, coef(c, j, M) + coef(k[1], j, M) * 0.5, coef(c, j+1, M) + coef(k[1], j+1, M) * 0.5, coef(c, j+2, M) + coef(k[1], j+2, M) * 0.5, coef(c, j+3, M) + coef(k[1], j+3, M) * 0.5);
                     }
 
                      // calculation of k[3][]
                     for (int j = 0; j <= Jmax; j++){
-                        auto[cj3, cj2, cj1, cJ0, cJ1, cJ2, cJ3] = assign_coeff(c, j, M);
-                        auto[kj3, kj2, kj1, kJ0, kJ1, kJ2, kJ3] = assign_coeff(k[2], j, M);
-                        k[3][j] = dt * calc_schrodinger_equation(t + dt, j, M, cj3 + kj3, cj2 + kj2, cj1 + kj1, cJ0 + kJ0, cJ1 + kJ1, cJ2 + kJ2, cJ3 + kJ3);
+                        k[3][j] = dt * calc_schrodinger_equation(t + dt, j, M, coef(c, j-3, M) + coef(k[2], j-3, M), coef(c, j-2, M) + coef(k[2], j-2, M), coef(c, j-1, M) + coef(k[2], j-1, M), coef(c, j, M) + coef(k[2], j, M), coef(c, j+1, M) + coef(k[2], j+1, M), coef(c, j+2, M) + coef(k[2], j+2, M), coef(c, j+3, M) + coef(k[2], j+3, M));
                     }
 
                     for (int j = 0; j <= Jmax; j++){
                         c[j] = c[j] + (k[0][j] + 2.0*k[1][j] + 2.0*k[2][j] + k[3][j]) / 6.0;
-                        norm_wp += norm(c[j]);
                     }
                 } // end of the RK calculation
                 else{ // Large step without RK calculation in the region where the laser pulse is extremely weak or does not exist.
-                
                     dt = dt_large;
                 
                     // Norm calculation
-                    for (int j = 0; j <= Jmax; j++)
-                    {
+                    for (int j = 0; j <= Jmax; j++){
                         norm_wp += norm(c[j]);
                     }
                 }
@@ -142,92 +129,84 @@ int main(){
                 exp_cos2 = calculate_cos2_expectation_value(c, M, t, dt);
                 exp_cos = calculate_cos_expectation_value(c, M, t, dt);
 
-                if (T == 0.0)
-                {
+                if (T == 0.0){
                     std::cout << (t + dt)*pow(10.0, 15.0) << "\t" << real(exp_cos) << "\t" << exp_cos.imag() << "\t" << exp_cos2.imag() << "\t" << norm_wp << "\n";
                 }
 
                 // get alignment and orientation parameters
-                if (Ethr < (E1w(t) + E2w(t))) // at small step RK calculation
-                {
-                    if (step%data_sampling_step == 0 && data_sampling_step <= step) // data aquisition every data_sampling_step steps
-                    {
-                        cos2[N] = P * real(exp_cos2) + cos2[N];  // time series of <cos^2theta>
-                        cos[N] = P * real(exp_cos) + cos[N];  // time series of <costheta>
+                if (Ethr < (E1w(t) + E2w(t))){ // at small step RK calculation
+                    if (step%data_sampling_step == 0 && data_sampling_step <= step){ // data aquisition every data_sampling_step steps
+                        cos2[time_step_idx] = rot_level_weight * real(exp_cos2) + cos2[time_step_idx];  // time series of <cos^2theta>
+                        cos[time_step_idx] = rot_level_weight * real(exp_cos) + cos[time_step_idx];  // time series of <costheta>
 
                         // at the end of the calculation...
-                        if (Jint == Jcalc && M == Jint)
-                        {
+                        if (Jint == Jcalc && M == Jint){
                             // write the results in txt file
-                            file_cos2 << (t + dt) / Trot << "\t" << cos2[N] << "\n";
-                            file_cos << (t + dt) / Trot << "\t" << cos[N] << "\n";
+                            file_cos2 << (t + dt) / Trot << "\t" << cos2[time_step_idx] << "\n";
+                            file_cos << (t + dt) / Trot << "\t" << cos[time_step_idx] << "\n";
 
                             // obtain the maximum value of <cos^2theta>
-                            if (cos2max <= cos2[N])
-                                cos2max = cos2[N];
+                            if (cos2max <= cos2[time_step_idx]){
+                                cos2max = cos2[time_step_idx];
+                            }
 
                             // obtain the maximum value of <costheta>
-                            if (cosmax <= cos[N])
-                                cosmax = cos[N];
+                            if (cosmax <= cos[time_step_idx]){
+                                cosmax = cos[time_step_idx];
+                            }
 
                             // obtain the minimum value of <costheta>
-                            if (cos[N] <= cosmin)
-                                cosmin = cos[N];
+                            if (cos[time_step_idx] <= cosmin){
+                                cosmin = cos[time_step_idx];
+                            }
                         }
 
-                        else;
-
-                        N += 1; //next step data
+                        time_step_idx += 1; //next step data
                     }
-
-                    else;
 
                     step += 1;
-
                 }
-
-                else // at long duration step calculation
-                {
-                    cos2[N] = P * real(exp_cos2) + cos2[N];  // time series of <cos^2theta>
-                    cos[N] = P * real(exp_cos) + cos[N];  // time series of <costheta>
+                else{ // at large step calculation
+                    cos2[time_step_idx] = rot_level_weight * real(exp_cos2) + cos2[time_step_idx];  // time series of <cos^2theta>
+                    cos[time_step_idx] = rot_level_weight * real(exp_cos) + cos[time_step_idx];  // time series of <costheta>
 
                     // at the end of the calculation...
-                    if (Jint == Jcalc && M == Jint)
-                    {
+                    if (Jint == Jcalc && M == Jint){
                         // write the results in txt file
-                        file_cos2 << (t + dt) / Trot << "\t" << cos2[N] << "\n";
-                        file_cos << (t + dt) / Trot << "\t" << cos[N] << "\n";
+                        file_cos2 << (t + dt) / Trot << "\t" << cos2[time_step_idx] << "\n";
+                        file_cos << (t + dt) / Trot << "\t" << cos[time_step_idx] << "\n";
 
                         // obtain the maximum value of <cos^2theta>
-                        if ((0 <= t) && (cos2max <= cos2[N]))
-                            cos2max = cos2[N];
+                        if ((0 <= t) && (cos2max <= cos2[time_step_idx])){
+                            cos2max = cos2[time_step_idx];
+                        }
 
                         // obtain the maximum value of <costheta>
-                        if (cosmax <= cos[N])
-                            cosmax = cos[N];
+                        if (cosmax <= cos[time_step_idx]){
+                            cosmax = cos[time_step_idx];
+                        }
 
                         // obtain the minimum value of <costheta>
-                        if (cos[N] <= cosmin)
-                            cosmin = cos[N];
+                        if (cos[time_step_idx] <= cosmin){
+                            cosmin = cos[time_step_idx];
+                        }
                     }
-                    else;
 
-                    N += 1; //next step data
+                    time_step_idx += 1; //next step data
                 }  // end of the getting the alignment and orientation parameters
             }  // end of the time evolution
 
              // final population calculation
             for (int j = 0; j <= Jmax; j++){
-                cfin[j] = P * norm(c[j]) + cfin[j];
-                if (Jint == Jcalc && M == Jint)  // at the end of the calculation, write the results in txt file
+                cfin[j] = rot_level_weight * norm(c[j]) + cfin[j];
+                if (Jint == Jcalc && M == Jint){  // at the end of the calculation, write the results in txt file
                     file_finpop << j << "\t" << cfin[j] << "\n";
+                }
             }  // end of the final population calculation
 
             std::cout << "J" << Jint << "M" << M << "\tN=" << norm_wp << "\tIm(cos)=" << exp_cos.imag() << "\tIm(cos2)=" << exp_cos2.imag() << "\n";
             file_output << " J" << Jint << "M" << M << "\tN=" << norm_wp << "\tIm(cos)=" << exp_cos.imag() << "\tIm(cos2)=" << exp_cos2.imag() << "\n";
-
         }  // end of the calculation of all M for specific J
-        
     }  // end of the all Jint calculation
 
     end = clock(); // calculation time
@@ -280,3 +259,4 @@ int main(){
 
     return 0;
 }
+
