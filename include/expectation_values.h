@@ -9,7 +9,7 @@
 #define expectation_values_h
 
 
-std::complex<double> calculate_cos2_expectation_value(std::complex<double> (&c)[NUM], int M, double t, double dt){
+std::complex<double> calculate_cos2_expectation_value(std::complex<double> (&c)[num_rot_levels], int M, double t, double dt){
 
     std::complex<double> align = 0.0, asum = 0.0; // align: alignment parameter
 
@@ -45,7 +45,7 @@ std::complex<double> calculate_cos2_expectation_value(std::complex<double> (&c)[
 }
 
 
-std::complex<double> calculate_cos_expectation_value(std::complex<double> (&c)[NUM], int M, double t, double dt){
+std::complex<double> calculate_cos_expectation_value(std::complex<double> (&c)[num_rot_levels], int M, double t, double dt){
 
     std::complex<double> orient = 0.0, osum = 0.0; // orient: orientaion parameter
 

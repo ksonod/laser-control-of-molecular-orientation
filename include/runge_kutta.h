@@ -1,8 +1,8 @@
 #ifndef runge_kutta_h
 #define runge_kutta_h
 
-
-std::complex<double> RK(double t, int J, int M, std::complex<double> Cj3, std::complex<double> Cj2, std::complex<double> Cj1, std::complex<double> C0, std::complex<double> CJ1, std::complex<double> CJ2, std::complex<double> CJ3)
+// Schrodinger equation used for Runge-Kutta calculation.
+std::complex<double> calc_schrodinger_equation(double t, int J, int M, std::complex<double> Cj3, std::complex<double> Cj2, std::complex<double> Cj1, std::complex<double> C0, std::complex<double> CJ1, std::complex<double> CJ2, std::complex<double> CJ3)
 {
     double wj3 = (Erot(double(J) - 3.0) - Erot(double(J))) / hbar;
     double wj2 = (Erot(double(J) - 2.0) - Erot(double(J))) / hbar;
@@ -27,7 +27,7 @@ std::complex<double> RK(double t, int J, int M, std::complex<double> Cj3, std::c
 /*
  This funcition considers allowed interactions between different J states.
  */
-std::tuple<std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>> assign_coeff(std::complex<double> (&c)[NUM], int j, int M)
+std::tuple<std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>, std::complex<double>> assign_coeff(std::complex<double> (&c)[num_rot_levels], int j, int M)
 {
     std::complex<double> cj3 = 0.0, cj2 = 0.0, cj1 = 0.0, cJ0 = 0.0, cJ1 = 0.0, cJ2 = 0.0, cJ3 = 0.0;
 
