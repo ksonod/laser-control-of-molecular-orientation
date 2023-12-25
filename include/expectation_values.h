@@ -72,4 +72,24 @@ std::complex<double> calculate_cos_expectation_value(std::complex<double> (&c)[n
 }
 
 
+std::tuple<double, double> return_max_min_values(double (&arr)[num_time_series_data]){
+    
+    double max_val = 0.0;
+    double min_val = 0.0;
+    
+    for (int i=0; i<num_time_series_data; i++){
+        if (max_val < arr[i]){
+            max_val = arr[i];
+        }
+        
+        if (min_val > arr[i]){
+            min_val = arr[i];
+        }
+    }
+    
+    return {max_val, min_val};
+}
+
+
+
 #endif /* expectation_values_h */

@@ -32,7 +32,7 @@ double dt_large = 40.0*pow(10.0, -15.0);
 double Ethr = 600000.0;
 
 const int num_time_series_data = 60000;
-const int data_sampling_step = 100; // Data sampling is conducted every data_sampling_step*dt seconds.
+const int data_sampling_step = 50; // Data is sampled every data_sampling_step*dt seconds.
 
 
 void check_params()
