@@ -1,6 +1,9 @@
 #ifndef params_h
 #define params_h
 
+/*
+* Parameters can be changed depending on molecular species and simulation conditions
+*/
 /* Molecular properties */
 const double apara = 54.06 * (1.64878 * pow(10.0, -41.0));  // Parallel component of polarizability in SI unit
 const double aperp = 26.09 * (1.64878 * pow(10.0, -41.0));  // Perpendicular component of polarizability in SI unit
@@ -17,7 +20,7 @@ const double intensity0 = 20.0 * pow(10.0, 12.0); // First laser pulse intensity
 const double intensity1 = 30.0 * pow(10.0, 12.0); // Second laser pulse (fundamental frequency) intensity in W/cm^2 unit
 const double pulse_fwhm = 70.0 * pow(10.0, -15.0);  // Laser pulse width (full-width at half maximum) in seconds
 const double phase = 0.0;  // Relative phase of w (fundamental) and 2w (second harmonic). ->  phi = phase * PI
-const double phi = phase * PI; // Relative phase in radian
+const double phi = phase * pi; // Relative phase in radian
 const double rat = 0.5;  // Intensity ratio of second harmonic and fundamental light: I2w/Iw
 const double n_delay = 0.242; // Temporal delay between first and second pulses in the unit of t_rot_period (rotational period)
 const double t_delay = n_delay * t_rot_period;  // Temporal delay between the first and second pulses in seconds.
@@ -35,6 +38,7 @@ const double rot_population_thr = 0.0001;   // threshold of rotationl distributi
 const double electric_field_thr = 600000.0;  // Threshold value for electric field strength to judge if the light is strong. -> Decision point for RK calculation.
 
 
+/* DO NOT MODIFY CODE BELOW */
 void check_params(){
     if (Jmax < 3 || num_rot_levels <= Jmax){
         throw std::invalid_argument("Jmax should be changed.");

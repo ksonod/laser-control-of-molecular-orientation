@@ -56,16 +56,16 @@ int calculate_initial_population(double T){
     double Z = partition_function(T);
     bool haveJcalc = false;
      
-    FILE* intpop = std::fopen("intpop.txt", "w");
+    std::ofstream file_intpop("intpop.txt");
     
     if (T == 0.0){
         Jcalc = 0; // J=0 only
         for (int j = 0; j <= Jmax; j++){ // J=0 only
             if (j == 0){
-                fprintf(intpop, "%d\t%f\n", j, 1.0);
+                file_intpop << j << "\t" << 1.0 << "\n";
             }
             else{
-                fprintf(intpop, "%d\t%f\n", j, 0.0);
+                file_intpop << j << "\t" << 0.0 << "\n";
             }
         }
     }
@@ -74,19 +74,16 @@ int calculate_initial_population(double T){
 
         for (int j = 0; j <= Jmax; j++){
             z = (2.0 * double(j) + 1.0) * exp(-b * rot_energy(j));
+            file_intpop << j << "\t" << z / Z << "\n";
 
             if ((z / Z <= rot_population_thr) && (haveJcalc==false)){
-                fprintf(intpop, "%d\t%f\n", j, z / Z);
                 Jcalc = j - 1;
                 haveJcalc = true;
-            }
-            else{
-                fprintf(intpop, "%d\t%f\n", j, z / Z);
             }
         }
     }
 
-    std::fclose(intpop);
+    file_intpop.close();
     
     return Jcalc;
 }

@@ -1,12 +1,12 @@
 /*
-LASER-INDUCED MOLECULAR ORIENTATION SIMULATOR
-This is a simulator to calculate molecular orientation dynamics induced by two-color intense femtosecond laser pulses.
+* LASER-INDUCED MOLECULAR ORIENTATION SIMULATOR
+* This is a simulator for molecular orientation/alignment dynamics induced by two-color intense femtosecond laser pulses.
 */
 
 #include <iostream>
 #include <fstream>
 #include <complex>
-#include "physics_constant.h"
+#include "constants.h"
 #include "params.h"
 #include "matrix_element.h"
 #include "laser_pulses.h"
@@ -28,8 +28,8 @@ int main(){
     double t;  // Time
     double dt;  // Time step
     std::complex<double> c[num_rot_levels], k[4][num_rot_levels];  //c[] is coefficient of wavefunction.
-    std::complex<double> exp_cos2; // Expectation value of cos2 (alignment parameter)
-    std::complex<double> exp_cos; // Expectation value of cos (orientation parameter)
+    std::complex<double> exp_cos2;  // Expectation value of cos2 (alignment parameter)
+    std::complex<double> exp_cos;  // Expectation value of cos (orientation parameter)
     clock_t start, end;  // calculation time
 
     time_t timer;
@@ -136,8 +136,8 @@ int main(){
                     cos[time_idx] += rot_level_weight * exp_cos.real();  // Time series of <costheta>
 
                     if (Jint == Jcalc && M == Jint){  // Write results in the text file at the end of J & M loop.
-                        file_cos2 << (t + dt) / t_rot_period << "\t" << cos2[time_idx] << "\n";
-                        file_cos << (t + dt) / t_rot_period << "\t" << cos[time_idx] << "\n";
+                        file_cos2 << (t + dt) * pow(10, 12) << "\t" << cos2[time_idx] << "\n";
+                        file_cos << (t + dt) * pow(10, 12) << "\t" << cos[time_idx] << "\n";
                     }
                     time_idx += 1;
                 }
