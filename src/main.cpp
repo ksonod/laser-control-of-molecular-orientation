@@ -124,6 +124,9 @@ int main(){
                 exp_cos = calculate_cos_expectation_value(c, M, t+dt);  // Expectation value of cos
 
                 if (T == 0.0){
+                    for (int j = 0; j <= Jmax; j++){
+                        norm_wp += norm(c[j]);  // Norm calculation
+                    }
                     std::cout << (t + dt)*pow(10.0, 15.0) << "\t" << exp_cos.real() << "\t" << exp_cos.imag() << "\t" << exp_cos2.imag() << "\t" << norm_wp << "\n";
                 }
                       
@@ -142,8 +145,10 @@ int main(){
 
              // Calculation of norm and final population
             for (int j = 0; j <= Jmax; j++){
-                norm_wp += norm(c[j]);  // Norm calculation
-
+                if (0.0 < T){
+                    norm_wp += norm(c[j]);  // Norm calculation
+                }
+                
                 cfin[j] += rot_level_weight * norm(c[j]); // Final population
                 if (Jint == Jcalc && M == Jint){  // Write the results in txt file at the end
                     file_finpop << j << "\t" << cfin[j] << "\n";
