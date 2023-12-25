@@ -19,7 +19,7 @@ int main(){
     double rot_level_weight;  // Statistic weight
     int Jcalc;  // Jcalc is the maximum value of J in calculation
     int time_idx;  // Number of steps
-    int data_sampling_counts = 1;  // Steps in time evolution
+    int data_sampling_counts;  // Steps in time evolution
     double cos[num_time_series_data] = {0};  // time series of <costheta>
     double cos2[num_time_series_data] = {0}; // time series of <cos2theta>
     double norm_wp = 0.0;  // Norm of wavepacket coefficients.
@@ -27,8 +27,8 @@ int main(){
     double calctime;  // calculation time
     std::complex<double> c[num_rot_levels], k[4][num_rot_levels];  //c[] is coefficient of wavefunction.
     double cfin[num_rot_levels] = {0};
-    std::complex<double> exp_cos2 = 0.0; // Expectation value of cos2 (alignment parameter)
-    std::complex<double> exp_cos = 0.0; // Expectation value of cos (orientation parameter)
+    std::complex<double> exp_cos2; // Expectation value of cos2 (alignment parameter)
+    std::complex<double> exp_cos; // Expectation value of cos (orientation parameter)
     
     double t;  // time
     double dt = dt_small;
@@ -88,7 +88,7 @@ int main(){
                 norm_wp = 0.0;
                 dt = dt_small; // small step
 
-                if (Ethr < (E1w(t) + E2w(t))){  // Runge-Kutta calculation in the region where the effect of laser pulse is important
+                if (electric_field_thr < (E1w(t) + E2w(t))){  // Runge-Kutta calculation in the region where the effect of laser pulse is important
                     // calculation of k[0][]
                     for (int j = 0; j <= Jmax; j++){
                         k[0][j] = dt * calc_schrodinger_equation(t, j, M, coef(c, j-3, M), coef(c, j-2, M), coef(c, j-1, M), coef(c, j, M), coef(c, j+1, M), coef(c, j+2, M), coef(c, j+3, M));
@@ -124,17 +124,17 @@ int main(){
                 exp_cos = calculate_cos_expectation_value(c, M, t, dt);  // Expectation value of cos
 
                 if (T == 0.0){
-                    std::cout << (t + dt)*pow(10.0, 15.0) << "\t" << real(exp_cos) << "\t" << exp_cos.imag() << "\t" << exp_cos2.imag() << "\t" << norm_wp << "\n";
+                    std::cout << (t + dt)*pow(10.0, 15.0) << "\t" << exp_cos.real() << "\t" << exp_cos.imag() << "\t" << exp_cos2.imag() << "\t" << norm_wp << "\n";
                 }
                       
                 // Storing and saving expectation values of cos2 and cos.
                 if (data_sampling_counts%data_sampling_step == 0){
-                    cos2[time_idx] = rot_level_weight * real(exp_cos2) + cos2[time_idx];  // Time series of <cos^2theta>
-                    cos[time_idx] = rot_level_weight * real(exp_cos) + cos[time_idx];  // Time series of <costheta>
+                    cos2[time_idx] = rot_level_weight * exp_cos2.real() + cos2[time_idx];  // Time series of <cos^2theta>
+                    cos[time_idx] = rot_level_weight * exp_cos.real() + cos[time_idx];  // Time series of <costheta>
 
                     if (Jint == Jcalc && M == Jint){  // Write results in the text file at the end of J & M loop.
-                        file_cos2 << (t + dt) / Trot << "\t" << cos2[time_idx] << "\n";
-                        file_cos << (t + dt) / Trot << "\t" << cos[time_idx] << "\n";
+                        file_cos2 << (t + dt) / t_rot_period << "\t" << cos2[time_idx] << "\n";
+                        file_cos << (t + dt) / t_rot_period << "\t" << cos[time_idx] << "\n";
                     }
                     time_idx += 1; //next step data
                 }
@@ -208,4 +208,3 @@ int main(){
 
     return 0;
 }
-

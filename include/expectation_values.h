@@ -2,73 +2,75 @@
 #define expectation_values_h
 
 
-std::complex<double> calculate_cos2_expectation_value(std::complex<double> (&c)[num_rot_levels], int M, double t, double dt){
+std::complex<double> calculate_cos2_expectation_value(std::complex<double> (&c)[num_rot_levels], int m, double t, double dt){
 
-    std::complex<double> align = 0.0, asum = 0.0; // align: alignment parameter
+    std::complex<double> exp_cos2 = 0.0, temp_cos2 = 0.0;
 
-    for (int j = 0; j <= Jmax; j++)
-    {
-        if (j < abs(M)) // impossible
-            asum = 0.0;
+    for (int j = 0; j <= Jmax; j++){
+        if (j < abs(m)) // impossible
+            temp_cos2 = 0.0;
 
-        else if (j == Jmax || j == Jmax - 1)
-        {
-            if (j == abs(M) || j == abs(M) + 1)
-                asum = conj(c[j])*c[j] * d2J0(double(j), double(M));
-            else
-                asum = conj(c[j])*c[j] * d2J0(double(j), double(M)) + conj(c[j])*c[j - 2] * d2j2(double(j), double(M))*exp(-I * (Erot(double(j) - 2.0) - Erot(double(j))) * (t + dt) / hbar);
-            align = asum + align;
+        else if (j == Jmax || j == Jmax - 1){
+            if (j == abs(m) || j == abs(m) + 1){
+                temp_cos2 = conj(c[j])*c[j] * d2J0(j, m);
+            }
+            else{
+                temp_cos2 = conj(c[j])*c[j] * d2J0(j, m) + conj(c[j])*c[j - 2] * d2j2(j, m)*exp(-I * (rot_energy(j - 2) - rot_energy(j)) * (t + dt) / hbar);
+            }
+            exp_cos2 += temp_cos2;
         }
-        else if (j == 0 || j == 1)
-        {
-            asum = conj(c[j])*c[j] * d2J0(double(j), double(M)) + conj(c[j])*c[j + 2] * d2J2(double(j), double(M))*exp(-I * (Erot(double(j) + 2.0) - Erot(double(j))) * (t + dt) / hbar);
-            align = asum + align;
+        else if (j == 0 || j == 1){
+            temp_cos2 = conj(c[j])*c[j] * d2J0(j, m) + conj(c[j])*c[j + 2] * d2J2(j, m)*exp(-I * (rot_energy(j + 2) - rot_energy(j)) * (t + dt) / hbar);
+            exp_cos2 += temp_cos2;
         }
-        else
-        {
-            if (j - 2 < abs(M))
-                asum = conj(c[j])*c[j] * d2J0(double(j), double(M)) + conj(c[j])*c[j + 2] * d2J2(double(j), double(M))*exp(-I * (Erot(double(j) + 2.0) - Erot(double(j))) * (t + dt) / hbar);
-            else
-                asum = conj(c[j])*c[j] * d2J0(double(j), double(M)) + conj(c[j])*c[j - 2] * d2j2(double(j), double(M))*exp(-I * (Erot(double(j) - 2.0) - Erot(double(j))) * (t + dt) / hbar) + conj(c[j])*c[j + 2] * d2J2(double(j), double(M))*exp(-I * (Erot(double(j) + 2.0) - Erot(double(j))) * (t + dt) / hbar);
-            align = asum + align;
+        else{
+            if (j - 2 < abs(m)){
+                temp_cos2 = conj(c[j])*c[j] * d2J0(j, m) + conj(c[j])*c[j + 2] * d2J2(j, m)*exp(-I * (rot_energy(j + 2) - rot_energy(j)) * (t + dt) / hbar);
+            }
+            else{
+                temp_cos2 = conj(c[j])*c[j] * d2J0(j, m) + conj(c[j])*c[j - 2] * d2j2(j, m)*exp(-I * (rot_energy(j - 2) - rot_energy(j)) * (t + dt) / hbar) + conj(c[j])*c[j + 2] * d2J2(j, m)*exp(-I * (rot_energy(j + 2) - rot_energy(j)) * (t + dt) / hbar);
+            }
+            exp_cos2 += temp_cos2;
         }
-    }// end of the <cos^2theta> calculation
+    }
     
-    return align;
+    return exp_cos2;
 }
 
 
-std::complex<double> calculate_cos_expectation_value(std::complex<double> (&c)[num_rot_levels], int M, double t, double dt){
+std::complex<double> calculate_cos_expectation_value(std::complex<double> (&c)[num_rot_levels], int m, double t, double dt){
 
-    std::complex<double> orient = 0.0, osum = 0.0; // orient: orientaion parameter
+    std::complex<double> exp_cos = 0.0, temp_cos = 0.0;
 
     for (int j = 0; j <= Jmax; j++){
-        if (j < abs(M))
-            osum = 0.0;
-
+        if (j < abs(m)){
+            temp_cos = 0.0;
+        }
         else if (j == Jmax){ // no interaction with upper state
-            if (j == abs(M)) // no interaction
-                osum = 0.0;
-            else // interaction with lower state(J=J-1)
-                osum = conj(c[j])*c[j - 1] * d1j1(double(j), double(M))*exp(-I * (Erot(double(j) - 1.0) - Erot(double(j))) * (t + dt) / hbar);
-            orient = osum + orient;
+            if (j == abs(m)){ // no interaction
+                temp_cos = 0.0;
+            }
+            else{ // interaction with lower state(J=J-1)
+                temp_cos = conj(c[j])*c[j - 1] * d1j1(j, m)*exp(-I * (rot_energy(j - 1) - rot_energy(j)) * (t + dt) / hbar);
+            }
+            exp_cos += temp_cos;
         }
-
         else if (j == 0){ // no interaction with lower state
-            osum = conj(c[j])*c[j + 1] * d1J1(double(j), double(M))*exp(-I * (Erot(double(j) + 1.0) - Erot(double(j))) * (t + dt) / hbar);
-            orient = osum + orient;
+            temp_cos = conj(c[j])*c[j + 1] * d1J1(j, m)*exp(-I * (rot_energy(j + 1) - rot_energy(j)) * (t + dt) / hbar);
+            exp_cos += temp_cos;
         }
-
         else{
-            if (j == abs(M)) // no interaction with lower state
-                osum = conj(c[j])*c[j + 1] * d1J1(double(j), double(M))*exp(-I * (Erot(double(j) + 1.0) - Erot(double(j))) * (t + dt) / hbar);
-            else
-                osum = conj(c[j])*c[j - 1] * d1j1(double(j), double(M))*exp(-I * (Erot(double(j) - 1.0) - Erot(double(j))) * (t + dt) / hbar) + conj(c[j])*c[j + 1] * d1J1(double(j), double(M))*exp(-I * (Erot(double(j) + 1.0) - Erot(double(j))) * (t + dt) / hbar);
-            orient = osum + orient;
+            if (j == abs(m)){ // no interaction with lower state
+                temp_cos = conj(c[j])*c[j + 1] * d1J1(j, m)*exp(-I * (rot_energy(j + 1) - rot_energy(j)) * (t + dt) / hbar);
+            }
+            else{
+                temp_cos = conj(c[j])*c[j - 1] * d1j1(j, m)*exp(-I * (rot_energy(j - 1) - rot_energy(j)) * (t + dt) / hbar) + conj(c[j])*c[j + 1] * d1J1(j, m)*exp(-I * (rot_energy(j + 1) - rot_energy(j)) * (t + dt) / hbar);
+            }
+            exp_cos += temp_cos;
         }
-    }// end of the <costheta> calculation
+    }
 
-    return orient;
+    return exp_cos;
 }
 
 
@@ -89,7 +91,6 @@ std::tuple<double, double> return_max_min_values(double (&arr)[num_time_series_d
     
     return {max_val, min_val};
 }
-
 
 
 #endif /* expectation_values_h */

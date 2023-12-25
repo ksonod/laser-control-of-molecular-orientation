@@ -2,21 +2,21 @@
 #define runge_kutta_h
 
 // Schrodinger equation used for Runge-Kutta calculation.
-std::complex<double> calc_schrodinger_equation(double t, int J, int M, std::complex<double> cj3, std::complex<double> cj2, std::complex<double> cj1, std::complex<double> c0, std::complex<double> cJ1, std::complex<double> cJ2, std::complex<double> cJ3){
-    double wj3 = (Erot(double(J) - 3.0) - Erot(double(J))) / hbar;
-    double wj2 = (Erot(double(J) - 2.0) - Erot(double(J))) / hbar;
-    double wj1 = (Erot(double(J) - 1.0) - Erot(double(J))) / hbar;
-    double wJ1 = (Erot(double(J) + 1.0) - Erot(double(J))) / hbar;
-    double wJ2 = (Erot(double(J) + 2.0) - Erot(double(J))) / hbar;
-    double wJ3 = (Erot(double(J) + 3.0) - Erot(double(J))) / hbar;
+std::complex<double> calc_schrodinger_equation(double t, int j, int m, std::complex<double> cj3, std::complex<double> cj2, std::complex<double> cj1, std::complex<double> c0, std::complex<double> cJ1, std::complex<double> cJ2, std::complex<double> cJ3){
+    double wj3 = (rot_energy(j - 3) - rot_energy(j)) / hbar;
+    double wj2 = (rot_energy(j - 2) - rot_energy(j)) / hbar;
+    double wj1 = (rot_energy(j - 1) - rot_energy(j)) / hbar;
+    double wJ1 = (rot_energy(j + 1) - rot_energy(j)) / hbar;
+    double wJ2 = (rot_energy(j + 2) - rot_energy(j)) / hbar;
+    double wJ3 = (rot_energy(j + 3) - rot_energy(j)) / hbar;
 
-    double term0 = 0.25 * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * (aperp + da * d2J0(double(J), double(M)));
-    double term1 = (1.0 / 8.0) * (bpara - 3.0*bperp) * E1w(t) * E1w(t) * E2w(t) * d3J3(double(J), double(M)) * cos(phi);
-    double term2 = (1.0 / 8.0) * (bpara - 3.0*bperp) * E1w(t) * E1w(t) * E2w(t) * d3j3(double(J), double(M));
-    double term3 = 0.25 * da * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * d2J2(double(J), double(M));
-    double term4 = 0.25 * da * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * d2j2(double(J), double(M));
-    double term5 = (3.0 / 8.0 * bperp * E1w(t) * E1w(t) * E2w(t) * d1J1(double(J), double(M)) + (1.0 / 8.0)*(bpara - 3.0*bperp)* E1w(t) * E1w(t) * E2w(t) * d3J1(double(J), double(M))) * cos(phi);
-    double term6 = (3.0 / 8.0 * bperp * E1w(t) * E1w(t) * E2w(t) * d1j1(double(J), double(M)) + (1.0 / 8.0)*(bpara - 3.0*bperp)* E1w(t) * E1w(t) * E2w(t) * d3j1(double(J), double(M))) * cos(phi);
+    double term0 = 0.25 * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * (aperp + da * d2J0(j, m));
+    double term1 = (1.0 / 8.0) * (bpara - 3.0*bperp) * E1w(t) * E1w(t) * E2w(t) * d3J3(j, m) * cos(phi);
+    double term2 = (1.0 / 8.0) * (bpara - 3.0*bperp) * E1w(t) * E1w(t) * E2w(t) * d3j3(j, m);
+    double term3 = 0.25 * da * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * d2J2(j, m);
+    double term4 = 0.25 * da * (E1w(t) * E1w(t) + E2w(t) * E2w(t)) * d2j2(j, m);
+    double term5 = (3.0 / 8.0 * bperp * E1w(t) * E1w(t) * E2w(t) * d1J1(j, m) + (1.0 / 8.0)*(bpara - 3.0*bperp)* E1w(t) * E1w(t) * E2w(t) * d3J1(j, m)) * cos(phi);
+    double term6 = (3.0 / 8.0 * bperp * E1w(t) * E1w(t) * E2w(t) * d1j1(j, m) + (1.0 / 8.0)*(bpara - 3.0*bperp)* E1w(t) * E1w(t) * E2w(t) * d3j1(j, m)) * cos(phi);
 
     std::complex<double> ret = (I / hbar) * (term0 * c0 + term1 * cJ3 * exp(-I * wJ3*t) + term2 * cj3 * exp(-I * wj3*t) + term3 * cJ2 * exp(-I * wJ2*t) + term4 * cj2 * exp(-I * wj2*t) + term5 * cJ1 * exp(-I * wJ1*t) + term6 * cj1 * exp(-I * wj1*t));
     return  ret;

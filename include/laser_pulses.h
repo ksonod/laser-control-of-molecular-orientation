@@ -1,10 +1,10 @@
 #ifndef laser_pulses_h
 #define laser_pulses_h
 
-
+// Gaussian pulse envelope
 double pulse_envelope(double t, double intensity, double fwhm){
     double envelope = exp(-2.0 * log(2.0) * t * t / fwhm / fwhm);
-    double amplitude = sqrt(2.0 * 10000.0 * intensity / epsilon / vc);
+    double amplitude = sqrt(2.0 * 10000.0 * intensity / epsilon / speed_of_light);
     return envelope * amplitude;
 }
 
