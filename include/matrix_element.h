@@ -30,7 +30,7 @@ double d1J1(int j, int m){
 
 // <JM|cos^2|J-2M>
 double d2j2(int j, int m){
-    if ((j < 2) || abs(m) > j-2){
+    if ((j < 2) || j-2 < abs(m)){
         return 0.0;
     }
     else{

@@ -15,7 +15,7 @@ double T = 0.8;  // Temperature in K unit
 /* Laser parameters */
 const double intensity0 = 20.0*pow(10.0, 12.0); // First laser pulse intensity in W/cm^2 unit
 const double intensity1 = 30.0*pow(10.0, 12.0); // Second laser pulse (fundamental frequency) intensity in W/cm^2 unit
-const double FWHM = 70.0*pow(10.0, -15.0);  // Laser pulse width (full-width at half maximum) in seconds
+const double pulse_fwhm = 70.0*pow(10.0, -15.0);  // Laser pulse width (full-width at half maximum) in seconds
 const double phase = 0.0;  // Relative phase of w (fundamental) and 2w (second harmonic). ->  phi = phase * PI
 const double phi = phase * PI; // Relative phase in radian
 const double rat = 0.5;  // Intensity ratio of second harmonic and fundamental light: I2w/Iw

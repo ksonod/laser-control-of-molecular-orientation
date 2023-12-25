@@ -32,7 +32,7 @@ std::complex<double> coef(std::complex<double> (&c)[num_rot_levels], int j, int 
     else if (j < 0){
         return 0.0;
     }
-    else if (num_rot_levels < j){
+    else if (Jmax <= j){
         return 0.0;
     }
     else{
