@@ -5,7 +5,7 @@
 // Rotational energy in Joule unit
 double rot_energy(int j){
     double K = double(j) * (double(j) + 1.0);
-    double ret = (B_rot - D_centr * K) * K * h_planck * speed_of_light * 100.0;   // Centrifugal distortion is included.
+    double ret = (B_rot - D_centr * K) * K * h_planck * speed_of_light * 100.0;
     return ret;
 }
 
@@ -17,7 +17,7 @@ double partition_function(double T){
         Z = 1.0;
     }
     else{
-        double b = 1 / (k_boltzmann*T); // Boltzmann factor
+        double b = 1 / (k_boltzmann * T); // Boltzmann factor
 
         for (int j = 0; j <= Jmax; j++){
             z = (2.0 * double(j) + 1.0) * exp(-b * rot_energy(j));
@@ -35,7 +35,7 @@ double calculate_Mlevel_population(double T, int j, int m){
         p = 1.0;
     }
     else{ // finite temperature
-        double b = 1 / (k_boltzmann*T); // Boltzmann factor
+        double b = 1 / (k_boltzmann * T); // Boltzmann factor
         double Z = partition_function(T);
 
         if (m == 0){
@@ -52,9 +52,9 @@ double calculate_Mlevel_population(double T, int j, int m){
 
 int calculate_initial_population(double T){
     int Jcalc = 0 ;
-    double z=0.0;
+    double z = 0.0;
     double Z = partition_function(T);
-    int outnum = 0; // use in Jcaalc calculation
+    bool haveJcalc = false;
      
     FILE* intpop = std::fopen("intpop.txt", "w");
     
@@ -75,10 +75,10 @@ int calculate_initial_population(double T){
         for (int j = 0; j <= Jmax; j++){
             z = (2.0 * double(j) + 1.0) * exp(-b * rot_energy(j));
 
-            if (z / Z <= rot_population_thr && outnum == 0){  // if the distribution can be neglected( < 100Pthr%), then set J as Jcalc
+            if ((z / Z <= rot_population_thr) && (haveJcalc==false)){
                 fprintf(intpop, "%d\t%f\n", j, z / Z);
                 Jcalc = j - 1;
-                outnum = 1;
+                haveJcalc = true;
             }
             else{
                 fprintf(intpop, "%d\t%f\n", j, z / Z);

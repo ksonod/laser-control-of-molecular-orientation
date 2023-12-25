@@ -23,7 +23,7 @@ double E1w(double t){
 
 // Laser pulse with the second harmonic
 double E2w(double t){
-    return pulse_envelope(t, intensity1*rat, pulse_fwhm);
+    return pulse_envelope(t, intensity1 * rat, pulse_fwhm);
 }
 
 #endif /* laser_pulses_h */

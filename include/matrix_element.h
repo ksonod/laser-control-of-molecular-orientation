@@ -37,8 +37,7 @@ double d2j2(int j, int m){
         double J = double(j);
         double M = double(m);
         double a = (J * J - M * M) * ((J - 1.0) * (J - 1.0) - M * M) / (2.0 * J + 1.0) / (2.0 * J - 3.0);
-        double ret = 1.0 / (2.0 * J - 1.0) * sqrt(a);
-        return ret;
+        return 1.0 / (2.0 * J - 1.0) * sqrt(a);
     }
 }
 
@@ -52,8 +51,7 @@ double d2J0(int j, int m){
         double J = double(j);
         double M = double(m);
         double a = (J * (J + 1.0) - 3.0 * M * M) / (2.0 * J + 3.0) / (2.0 * J - 1.0);
-        double ret = 2.0 / 3.0 * a + 1.0 / 3.0;
-        return ret;
+        return 2.0 / 3.0 * a + 1.0 / 3.0;
     }
 }
 
@@ -67,8 +65,7 @@ double d2J2(int j, int m){
         double J = double(j);
         double M = double(m);
         double a = ((J + 2.0) * (J + 2.0) - M * M) * ((J + 1.0) * (J + 1.0) - M * M) / (2.0 * J + 5.0) / (2.0 * J + 1.0);
-        double ret = 1.0 / (2.0 * J + 3.0) * sqrt(a);
-        return ret;
+        return 1.0 / (2.0 * J + 3.0) * sqrt(a);
     }
 }
 
@@ -82,8 +79,7 @@ double d3j3(int j, int m){
         double J = double(j);
         double M = double(m);
         double a = (J + M) * (J + M - 1.0) * (J + M - 2.0) * (J - M) * (J - M - 1.0) * (J - M - 2.0) / (2.0 * J + 1.0) / (2.0 * J - 5.0);
-        double ret = sqrt(a) / (2.0 * J - 1.0) / (2.0 * J - 3.0);
-        return ret;
+        return sqrt(a) / (2.0 * J - 1.0) / (2.0 * J - 3.0);
     }
 }
 
@@ -98,8 +94,7 @@ double d3j1(int j, int m){
         double M = double(m);
         double a = (J + M) * (J - M) / (2.0 * J + 1.0) / (2.0 * J - 1.0);
         double b = 3.0 * (J * J - M * M - 2.0) / (2.0 * J + 3.0) / (2.0 * J - 3.0);
-        double ret = b * sqrt(a);
-        return ret;
+        return b * sqrt(a);
     }
 }
 
@@ -114,8 +109,7 @@ double d3J1(int j, int m){
         double M = double(m);
         double a = (J + M + 1.0) * (J - M + 1.0) / (2.0 * J + 3.0) / (2.0 * J + 1.0);
         double b = 3.0 * (J * (J + 2.0) - M * M - 1.0) / (2.0 * J + 5.0) / (2.0 * J - 1.0);
-        double ret = b * sqrt(a);
-        return ret;
+        return b * sqrt(a);
     }
 }
 
@@ -129,8 +123,7 @@ double d3J3(int j, int m){
         double J = double(j);
         double M = double(m);
         double a = (J - M + 1.0) * (J - M + 2.0) * (J - M + 3.0) * (J + M + 1.0) * (J + M + 2.0) * (J + M + 3.0) / (2.0 * J + 7.0) / (2.0 * J + 1.0);
-        double ret = sqrt(a) / (2.0 * J + 5.0) / (2.0 * J + 3.0);
-        return ret;
+        return sqrt(a) / (2.0 * J + 5.0) / (2.0 * J + 3.0);
     }
 }
 
